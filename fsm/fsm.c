@@ -13,7 +13,7 @@ static int currState = UNDEFINED;
 static int nextState = UNDEFINED;
 
 static int prevRegisteredFloor = -1;
-static int direction;
+static elevator_hardware_motor_direction_t direction;
 
 int fsm_get_current_floor(void){
     return elevator_hardware_get_floor_sensor_signal();
@@ -23,7 +23,7 @@ int fsm_init(void){
     prevRegisteredFloor = 0;
     direction = DIRN_STOP;
     if (fsm_get_current_floor() == 0){
-        elevator_hardware_set_motor_direction(direction);
+        elevator_hardware_set_motor_direction(DIRN_STOP);
         elevator_hardware_set_floor_indicator(0);
         nextState = IDLE;
         currState = UNDEFINED;
@@ -33,7 +33,7 @@ int fsm_init(void){
         while(1){
             if (fsm_get_current_floor() == 0){
                 elevator_hardware_set_floor_indicator(0);
-                elevator_hardware_set_motor_direction(direction);
+                elevator_hardware_set_motor_direction(DIRN_STOP);
                 nextState = IDLE;
                 currState = UNDEFINED;
                 return 0;
@@ -49,10 +49,10 @@ int fsm_run(void){
         switch(nextState){
             case IDLE:
                 elevator_hardware_set_motor_direction(DIRN_STOP);
-                //order_poll();
+                order_poll();
                 if(order_get_top(prevRegisteredFloor).set){
                     nextState = RUN;
-                    direction = DIRN_STOP;
+                    direction = DIRN_UP;
                 } else if (order_get_bottom(prevRegisteredFloor).set){
                     nextState = RUN;
                     direction = DIRN_DOWN;
@@ -85,21 +85,20 @@ int fsm_run(void){
                 elevator_hardware_set_motor_direction(DIRN_STOP);
                 elevator_hardware_set_door_open_lamp(1);
                 timer_start();
-
                 while(1){
                     order_poll();
-                    if(elevator_hardware_get_obstruction_signal() == 1){
-                        timer_start();
-                    }
                     if (timer_expire() == 1){
+                        printf("door_lamp off\n\r");
                         elevator_hardware_set_door_open_lamp(0);
                         break;
                     }
                 }
 
                 if (order_continue(direction, prevRegisteredFloor)){
+                    printf("next state run \n\r)");
                     nextState = RUN;
                 } else{
+                    printf("next state IDLE\n\r");
                     nextState = IDLE;
                 }
                 

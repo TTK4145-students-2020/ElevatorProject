@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include "hardware.h"
+#include "driver/elevator_hardware.h"
 #include "order.h"
 
 int order_add(order_t order){
@@ -12,8 +12,8 @@ int order_add(order_t order){
 
 int order_poll(void){
     order_t order;
-    for(int i = 0; i < HARDWARE_NUMBER_OF_FLOORS; i++){
-        if(hardware_read_order(i, BUTTON_COMMAND)){
+    for(int i = 0; i < N_FLOORS; i++){
+        if(elevator_hardware_get_button_signal(BUTTON_COMMAND, i)){
             //printf("%d\n\r", i);
             order.floor = i;
             order.orderType = BUTTON_COMMAND;
@@ -21,14 +21,14 @@ int order_poll(void){
             order_add(order);
             elevator_hardware_set_button_lamp(BUTTON_COMMAND, i, 1);
         }
-        if(hardware_read_order(i, BUTTON_CALL_DOWN)){
+        if(elevator_hardware_get_button_signal(BUTTON_CALL_DOWN, i)){
             order.floor = i;
             order.orderType = BUTTON_CALL_DOWN;
             order.set = 1;
             order_add(order);
             elevator_hardware_set_button_lamp(BUTTON_CALL_DOWN, i, 1);
         }
-        if(hardware_read_order(i, BUTTON_CALL_UP)){
+        if(elevator_hardware_get_button_signal(BUTTON_CALL_UP, i)){
             order.floor = i;
             order.orderType = BUTTON_CALL_UP;
             order.set = 1;
@@ -91,19 +91,19 @@ order_t order_get_bottom(int floor){
 
 
 
-int order_stop_at_floor(HardwareMovement direction, int Currfloor){
+int order_stop_at_floor(elevator_hardware_motor_direction_t direction, int Currfloor){
     switch(direction){
         case DIRN_DOWN:
             return orderQueue[Currfloor][BUTTON_CALL_DOWN].set || orderQueue[Currfloor][BUTTON_COMMAND].set || ((order_get_bottom(Currfloor).floor == Currfloor) && order_get_bottom(Currfloor).set) || Currfloor == 0;
         case DIRN_UP:
-            return orderQueue[Currfloor][BUTTON_CALL_UP].set || orderQueue[Currfloor][BUTTON_COMMAND].set || ((order_get_top(Currfloor).floor == Currfloor) && order_get_top(Currfloor).set) || Currfloor == HARDWARE_NUMBER_OF_FLOORS-1;
+            return orderQueue[Currfloor][BUTTON_CALL_UP].set || orderQueue[Currfloor][BUTTON_COMMAND].set || ((order_get_top(Currfloor).floor == Currfloor) && order_get_top(Currfloor).set) || Currfloor == N_FLOORS-1;
 
         default:
             return 1;
     }
 }
 
-int order_continue(HardwareMovement direction, int Currfloor){
+int order_continue(elevator_hardware_motor_direction_t direction, int Currfloor){
     switch (direction)
     {
     case DIRN_DOWN:

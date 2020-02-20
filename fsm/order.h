@@ -5,23 +5,28 @@
 
 #ifndef ORDER_H
 #define ORDER_H
+#include <stdbool.h>
+#include "driver/elevator_hardware.h"
 
 #define FLOORS 4
 #define orderTypes 3
 
-/**
- * Creates an 4x3 order matrix, which we access to handle orders.
- */
-static order_t orderQueue[FLOORS][orderTypes];
 
 /**
- * @brief Struct containing the floor of the order, the type and if its active.
+ * Creates an 4x3 order matrix, which we access to handle orders.
  */
 typedef struct order{
     int floor;
     int orderType;
     bool set;
 }order_t;
+
+static order_t orderQueue[FLOORS][orderTypes];
+
+/**
+ * @brief Struct containing the floor of the order, the type and if its active.
+ */
+
 
 
 /**
@@ -63,6 +68,6 @@ order_t order_get_top(int floor);
  */
 order_t order_get_bottom(int floor);
 //order_t order_get_next(HardwareMovement direction, int prevRegisteredFloor);
-int order_stop_at_floor(HardwareMovement direction, int floor);
-int order_continue(HardwareMovement direction, int floor);
+int order_stop_at_floor(elevator_hardware_motor_direction_t direction, int floor);
+int order_continue(elevator_hardware_motor_direction_t direction, int floor);
 #endif
