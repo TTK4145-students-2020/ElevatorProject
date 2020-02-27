@@ -1,5 +1,4 @@
-#include <stdlib.h>
-#include <time.h>
+
 #include "timer.h"
 
 int timer_start(void){

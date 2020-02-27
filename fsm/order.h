@@ -7,6 +7,8 @@
 #define ORDER_H
 #include <stdbool.h>
 #include "driver/elevator_hardware.h"
+#include <stdlib.h>
+#include <stdio.h>
 
 #define FLOORS 4
 #define orderTypes 3
@@ -54,7 +56,7 @@ void order_clear_all(void);
 /**
  * @return order from a @p floor and of a @p orderType.
  */
-order_t order_get(int floor, int orderType);
+int order_get(int floor);
 
 /**
  * @return The topmost order from elevator position.

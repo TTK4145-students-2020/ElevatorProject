@@ -1,5 +1,5 @@
 #include "fsm.h"
-#include "driver/elevator_hardware.h"
+
 
 
 #define UNDEFINED -1
@@ -50,7 +50,10 @@ int fsm_run(void){
             case IDLE:
                 elevator_hardware_set_motor_direction(DIRN_STOP);
                 order_poll();
-                if(order_get_top(prevRegisteredFloor).set){
+                if(order_get(fsm_get_current_floor())){
+                    nextState = DOOR_OPEN;
+                }
+                else if(order_get_top(prevRegisteredFloor).set){
                     nextState = RUN;
                     direction = DIRN_UP;
                 } else if (order_get_bottom(prevRegisteredFloor).set){
@@ -65,6 +68,7 @@ int fsm_run(void){
                 order_poll();
                 
                 if(fsm_get_current_floor() != -1){
+                    elevator_hardware_set_floor_indicator(fsm_get_current_floor());
                     prevRegisteredFloor = fsm_get_current_floor();
                     if(order_stop_at_floor(direction, prevRegisteredFloor)){
                         order_clear_floor(prevRegisteredFloor);
@@ -84,6 +88,9 @@ int fsm_run(void){
 
                 elevator_hardware_set_motor_direction(DIRN_STOP);
                 elevator_hardware_set_door_open_lamp(1);
+                elevator_hardware_set_button_lamp(BUTTON_CALL_DOWN, fsm_get_current_floor(), 0);
+                elevator_hardware_set_button_lamp(BUTTON_CALL_UP, fsm_get_current_floor(), 0);
+                elevator_hardware_set_button_lamp(BUTTON_COMMAND, fsm_get_current_floor(), 0);
                 timer_start();
                 while(1){
                     order_poll();

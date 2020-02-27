@@ -6,6 +6,9 @@
 #ifndef TIMER_H
 #define TIMER_H
 
+#include <stdlib.h>
+#include <time.h>
+
 #define timeLimit 3
 
 /**

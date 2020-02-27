@@ -1,7 +1,4 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include "driver/elevator_hardware.h"
+
 #include "order.h"
 
 int order_add(order_t order){
@@ -57,8 +54,13 @@ void order_clear_all(void){
     }
 }
 
-order_t order_get(int floor, int orderType){
-    return orderQueue[floor][orderType];
+int order_get(int floor){
+    for(int i = 0; i < 3; i ++){
+        if(orderQueue[floor][i].set){
+            return 1;
+        }
+    }
+    return 0;
 }
 
 order_t order_get_top(int floor){
