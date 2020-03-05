@@ -44,7 +44,6 @@ p1 = Thread(target = network.UDP_listen, args=(20008,))
 p1.start()
 #p2.start()
 while True:
-    p1.start()
     try:
         p1.join(timeout=3)
     except:
