@@ -17,8 +17,9 @@ network = Network.Network("localhost", 20009)
 #p1 = Thread(target = network.UDP_listen, args=(20009,))
 p2 = Thread(target =network.UDP_broadcast, args=(json_packet, '<broadcast>', 20008,))
 #p1.start()
-p2.start()
+
 while True:
+    p2.start()
     p2.join(timeout=3)
     try:
         #p1.join(timeout=3)
