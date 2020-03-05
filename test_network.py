@@ -15,4 +15,4 @@ while True:
             }
     json_packet = json.dumps(message_)
     json_packet = bytes(json_packet, "ascii")
-    network.UDP_broadcast(json_packet, "", 20009)
+    network.UDP_broadcast(json_packet, '<broadcast>', 20009)
