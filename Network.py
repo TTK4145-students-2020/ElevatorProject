@@ -10,8 +10,9 @@ class Network:
     #Sets the broadcasting settings and connect.
         try:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.sock.bind((IP_address, port))
+            #self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            #self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+            #self.sock.bind((IP_address, port))
             self.sock.settimeout(3)
         except:
             pass 
