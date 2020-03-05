@@ -40,13 +40,18 @@ json_packet = json.dumps(message_)
 json_packet = bytes(json_packet, "ascii")
 network = Network.Network("localhost", 20008)
 p1 = Thread(target = network.UDP_listen, args=(20008,))
-#p2 = Thread(target =network.UDP_broadcast, args=(json_packet, '<broadcast>', 20009,))
+p2 = Thread(target =network.UDP_broadcast, args=(json_packet, '<broadcast>', 20009,))
 p1.start()
-#p2.start()
+p2.start()
 while True:
+    try:
+        p2.join(timeout=3)
+    except:
+        pass
     try:
         p1.join(timeout=3)
     except:
         pass
+
     #p2.join(timeout=3)
     #network.UDP_broadcast(json_packet, '<broadcast>', 20009)
