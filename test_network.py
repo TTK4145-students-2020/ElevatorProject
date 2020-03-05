@@ -20,8 +20,9 @@ p2 = Thread(target =network.UDP_broadcast, args=(json_packet, '<broadcast>', 200
 
 while True:
     p2.start()
-    p2.join(timeout=3)
+    
     try:
+        p2.join(timeout=3)
         #p1.join(timeout=3)
     except:
         pass
