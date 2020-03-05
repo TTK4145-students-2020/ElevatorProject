@@ -12,7 +12,7 @@ class Network:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-            self.sock.bind(("", port))
+            
             self.sock.settimeout(3)
         except:
             pass 
@@ -31,8 +31,9 @@ class Network:
 
     def UDP_listen(self, port):
     # Listens given port all the time.
+        self.sock.bind(("", port))
         json_packet, address = self.sock.recvfrom(1024)
-    
+        print(json_packet)
         return json_packet, address
 
 
