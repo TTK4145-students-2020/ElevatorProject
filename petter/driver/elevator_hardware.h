@@ -6,6 +6,8 @@
 // Number of buttons (and corresponding lamps) on a per-floor basis
 #define N_BUTTONS 3
 
+#define N_ELEVATORS 3
+
 typedef enum tag_elevator_hardware_motor_direction { 
     DIRN_DOWN = -1,
     DIRN_STOP = 0,

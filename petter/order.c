@@ -19,27 +19,26 @@ int order_poll_buttons(void){
     order_t order;
 
     for(int i = 0; i < N_FLOORS; i++){
-
-        if(hardware_read_order(i, BUTTON_COMMAND)){
+        if(elevator_hardware_get_button_signal(BUTTON_COMMAND, i)){
             order.floor = i;
             order.orderType = BUTTON_COMMAND;
             order.set = 1;
             order_add(order);
-            hardware_command_order_light(i,BUTTON_COMMAND, 1);
+            elevator_hardware_set_button_lamp(BUTTON_COMMAND, i, 1);
         }
-        if(hardware_read_order(i, BUTTON_CALL_DOWN)){
+        if(elevator_hardware_get_button_signal(BUTTON_CALL_DOWN, i)){
             order.floor = i;
             order.orderType = BUTTON_CALL_DOWN;
             order.set = 1;
             order_add(order);
-            hardware_command_order_light(i, BUTTON_CALL_DOWN, 1);
+            elevator_hardware_set_button_lamp(BUTTON_CALL_DOWN, i, 1);;
         }
-        if(hardware_read_order(i, BUTTON_CALL_UP)){
+        if(elevator_hardware_get_button_signal(BUTTON_CALL_UP, i)){
             order.floor = i;
             order.orderType = BUTTON_CALL_UP;
             order.set = 1;
             order_add(order);
-            hardware_command_order_light(i, BUTTON_CALL_UP, 1);
+            elevator_hardware_set_button_lamp(BUTTON_CALL_UP, i, 1);;
         }
     }
     return 0;
@@ -49,7 +48,7 @@ int order_clear_floor(int floor){
 
     for (int j = 0; j < N_BUTTONS; j++){
         m_orderMatrix[floor][j].set = 0;
-        hardware_command_order_light(floor, j, 0);   
+        elevator_hardware_set_button_lamp(j, floor, 0);  
     }
     return 0;
 }
@@ -60,7 +59,7 @@ void order_clear_all(void){
 
         for (int j = 0; j < N_BUTTONS; j++){
                 m_orderMatrix[i][j].set = 0;
-                hardware_command_order_light(i, j, 0);
+                elevator_hardware_set_button_lamp(j, i, 0);;
         }
     }
 }

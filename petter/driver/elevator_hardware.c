@@ -99,7 +99,6 @@ int elevator_hardware_get_button_signal(elevator_hardware_button_type_t button, 
     return buf[1];
 }
 
-
 int elevator_hardware_get_floor_sensor_signal(void) {
     pthread_mutex_lock(&sockmtx);
     send(sockfd, (char[4]) {7}, 4, 0);

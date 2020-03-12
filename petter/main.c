@@ -1,16 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "hardware.h"
+#include "driver/elevator_hardware.h"
 #include "timer.h"
 #include "order.h"
 #include "fsm.h"
 
 int main(){
-    int error = hardware_init();
-    if(error != 0){
-        fprintf(stderr, "Unable to initialize hardware\n");
-        exit(1);
-    }
+    elevator_hardware_init();
 
     printf("=== Elevator initializing ===\n\r");
 
