@@ -4,7 +4,7 @@ static int m_nextState = UNDEFINED;
 
 static int m_prevRegisteredFloor = -1;
 
-static HardwareMovement m_direction;
+static elevator_hardware_motor_direction_t m_direction;
 
 static int m_stopBetweenFloors = 0;
 
@@ -18,22 +18,22 @@ int fsm_get_current_floor(void){
 int fsm_init(void){
 
     m_prevRegisteredFloor = 0;
-    m_direction = HARDWARE_MOVEMENT_STOP;
+    m_direction = DIRN_STOP;
     order_clear_all();
 
     if (hardware_read_floor_sensor(0)){
-        hardware_command_movement(HARDWARE_MOVEMENT_STOP);
+        hardware_command_movement(DIRN_STOP);
         hardware_command_floor_indicator_on(0);
         m_nextState = IDLE;
     }
     else{
-        hardware_command_movement(HARDWARE_MOVEMENT_DOWN);
+        hardware_command_movement(DIRN_DOWN);
 
         while(1){
 
             if (hardware_read_floor_sensor(0)){
                 hardware_command_floor_indicator_on(0);
-                hardware_command_movement(HARDWARE_MOVEMENT_STOP);
+                hardware_command_movement(DIRN_STOP);
                 m_nextState = IDLE;
                 return 0;
             }               
@@ -56,30 +56,30 @@ int fsm_run(void){
                     break;
                 }
                 
-                hardware_command_movement(HARDWARE_MOVEMENT_STOP);
+                hardware_command_movement(DIRN_STOP);
                 order_poll_buttons();
 
                 if(fsm_get_current_floor() == -1 && order_is_set(m_prevRegisteredFloor)){
                     
                     m_nextState = RUN;
 
-                    if(m_direction == HARDWARE_MOVEMENT_DOWN && !m_stopBetweenFloors){
-                        m_direction = HARDWARE_MOVEMENT_UP;
+                    if(m_direction == DIRN_DOWN && !m_stopBetweenFloors){
+                        m_direction = DIRN_UP;
 
-                    } else if(m_direction == HARDWARE_MOVEMENT_UP && !m_stopBetweenFloors){
-                        m_direction = HARDWARE_MOVEMENT_DOWN;
+                    } else if(m_direction == DIRN_UP && !m_stopBetweenFloors){
+                        m_direction = DIRN_DOWN;
                     }
                     m_stopBetweenFloors = 1;
 
                 } else if(order_get_top(m_prevRegisteredFloor).set){
                     m_nextState = RUN;
                     m_stopBetweenFloors = 0;
-                    m_direction = HARDWARE_MOVEMENT_UP;
+                    m_direction = DIRN_UP;
 
                 } else if (order_get_bottom(m_prevRegisteredFloor).set){
                     m_nextState = RUN;
                     m_stopBetweenFloors = 0;
-                    m_direction = HARDWARE_MOVEMENT_DOWN;
+                    m_direction = DIRN_DOWN;
                 }
                 break;
               
@@ -116,7 +116,7 @@ int fsm_run(void){
 
             case DOOR_OPEN:
         
-                hardware_command_movement(HARDWARE_MOVEMENT_STOP);
+                hardware_command_movement(DIRN_STOP);
                 hardware_command_door_open(1);
                 timer_start();
 
@@ -150,7 +150,7 @@ int fsm_run(void){
 
 
             case EMERGENCY_STOP:
-                hardware_command_movement(HARDWARE_MOVEMENT_STOP);
+                hardware_command_movement(DIRN_STOP);
                 hardware_command_stop_light(1);
                 order_clear_all();
                 

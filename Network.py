@@ -1,19 +1,23 @@
 import socket
+import config
 from multiprocessing import Process, SimpleQueue
 from threading import Thread
 
 # UDP_IP = "localhost"
 # UDP_PORT = 55681
+
 class Network:
-    count = 0
-    def __init__(self, IP_address, port):
+    online_elevators = [0]*config.NUMBER_OF_ELEVATORS
+    def __init__(self, IP_address, port, ID):
     #Sets the broadcasting settings and connect.
         try:
+            self.ID = ID
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-            
             self.sock.settimeout(3)
+
+            online_elevators[ID] = 1
         except:
             pass 
             
@@ -22,6 +26,7 @@ class Network:
         
     def disconnect_node(self):     
     # Disconnects a connection.
+        online_elevators[self.ID] = 0
         self.sock.shutdown()
         self.sock.close()
 

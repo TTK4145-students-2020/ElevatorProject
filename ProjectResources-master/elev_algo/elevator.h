@@ -2,6 +2,8 @@
 
 #include "elevator_io_types.h"
 
+#define NUMBER_OF_ELEVATORS 3
+
 typedef enum {
     EB_Idle,
     EB_DoorOpen,
