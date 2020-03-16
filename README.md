@@ -3,7 +3,7 @@
 run fsm.py file after compiling with the command below.
 
 
-commando to compile drivers to use python fsm and order module:
+commando to compile drivers to use python fsm and order module, must be run in the folder "petter":
 gcc --std=gnu11 -shared -fPIC timer.c driver/elevator_hardware.c -o driver.so /usr/local/lib/libcomedi.so
 
 if its not working, try:
