@@ -14,7 +14,6 @@ static pthread_mutex_t sockmtx;
 void elevator_hardware_init() {
     char ip[16] = "localhost";
     char port[8] = "15657";
-    printf("Hei\n\r");
     /*con_load("elevator_hardware.con",
         con_val("com_ip",   ip,   "%s")
         con_val("com_port", port, "%s")

@@ -15,10 +15,13 @@
  * @brief Struct containing the floor of the order, the type and if its active.
  */
 typedef struct order{
+    //int ID;
     int floor;
     int orderType;
-    bool set;
+    int set;
 }order_t;
+
+order_t order_get_order_matrix(int floor, int elev_id);
 
 /**
  * @brief Adds order to order matrix.

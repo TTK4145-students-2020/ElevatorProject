@@ -91,6 +91,7 @@ int fsm_run(void){
                 } */
                 elevator_hardware_set_motor_direction(m_direction);;
                 order_poll_buttons();
+                //order_get_order_matrix(1,1);
                 
                 if(fsm_get_current_floor() != -1){
                     int validFloor = fsm_get_current_floor();
@@ -99,7 +100,8 @@ int fsm_run(void){
                         m_prevRegisteredFloor = validFloor;
                         elevator_hardware_set_floor_indicator(validFloor);
                     }
-                                       
+                    int a = order_stop_at_floor(m_direction, m_prevRegisteredFloor);
+                    printf("bool: %d", a);
                     if(order_stop_at_floor(m_direction, m_prevRegisteredFloor)){
                         m_nextState = DOOR_OPEN;
                         break;

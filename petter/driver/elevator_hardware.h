@@ -8,6 +8,8 @@
 
 #define N_ELEVATORS 3
 
+#define ELEV_ID 1
+
 typedef enum tag_elevator_hardware_motor_direction { 
     DIRN_DOWN = -1,
     DIRN_STOP = 0,

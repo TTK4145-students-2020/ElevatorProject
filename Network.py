@@ -41,4 +41,5 @@ class Network:
         print(json_packet)
         return json_packet, address
 
+#get ip.
 
