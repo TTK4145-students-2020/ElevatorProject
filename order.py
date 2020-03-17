@@ -1,10 +1,15 @@
 from ctypes import *
 from ctypes.util import find_library
+import json
 import config
 
 heis = cdll.LoadLibrary("petter/driver.so")
 
 BUTTON_COMMAND = 2
+
+class MyEncoder(json.JSONEncoder):
+    def default(self, o):
+        return o.__dict__
 
 class Order:
 
@@ -16,15 +21,20 @@ class Order:
     
 
 class OrderMatrix():
-    #create order matrix
+    #create order matrix and position matrix
     m_order_matrix = []
+    
     for i in range(config.N_FLOORS):
         m_order_matrix.append([])
         for j in range(config.N_ELEVATORS):
             order = Order(i,-1, -1)
             m_order_matrix[i].append(order)
 
+
     def order_add(self, order):
+        if(OrderMatrix.m_order_matrix[order.floor][order.ELEV_ID].order_set == 1 and OrderMatrix.m_order_matrix[order.floor][order.ELEV_ID].order_type != order.order_type):
+            #print("hallalalalal\n")
+            order.order_type = config.BUTTON_MULTI
         order.order_set = 1
         OrderMatrix.m_order_matrix[order.floor][order.ELEV_ID] = order
     
@@ -34,27 +44,28 @@ class OrderMatrix():
             if(heis.elevator_hardware_get_button_signal(config.BUTTON_COMMAND, i)):
                 order.floor = i
                 order.order_type = config.BUTTON_COMMAND
-                order.order_set = 1
+                #order.order_set = 1
                 self.order_add(order)
                 heis.elevator_hardware_set_button_lamp(config.BUTTON_COMMAND,i,1)
 
             if(heis.elevator_hardware_get_button_signal(config.BUTTON_CALL_DOWN, i)):
                 order.floor = i
                 order.order_type = config.BUTTON_CALL_DOWN
-                order.order_set = 1
+                #order.order_set = 1
                 self.order_add(order)
                 heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_DOWN,i,1)
             
             if(heis.elevator_hardware_get_button_signal(config.BUTTON_CALL_UP, i)):
                 order.floor = i
                 order.order_type = config.BUTTON_CALL_UP
-                order.order_set = 1
+                #order.order_set = 1
                 self.order_add(order)
                 heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_UP,i,1)
     
     def order_clear_floor(self, floor):
+        #for i in range(config.N_BUTTONS):
+        OrderMatrix.m_order_matrix[floor][config.ELEV_ID].order_set = 0
         for i in range(config.N_BUTTONS):
-            OrderMatrix.m_order_matrix[floor][config.ELEV_ID].order_set = 0
             heis.elevator_hardware_set_button_lamp(i,floor,0)
         
     def order_clear_all(self):
@@ -68,6 +79,28 @@ class OrderMatrix():
             if(OrderMatrix.m_order_matrix[floor][i].order_set == 1):
                 return 1
         return 0
+    
+
+
+    def order_json_encode_order_matrix(self):
+        json_packet = json.dumps(OrderMatrix.m_order_matrix, cls=MyEncoder)
+        return json_packet
+
+    def order_json_decode_order_matrix(self, json_packet):
+        json_packet = json.JSONDecoder().decode(json_packet)
+        order_matrix = []
+        for i in range(config.N_FLOORS):
+            order_matrix.append([])
+            for j in range(config.N_ELEVATORS):
+                floor = json_packet[i][j]["floor"]
+                order_type = json_packet[i][j]["order_type"]
+                order_set = json_packet[i][j]["order_set"]
+                order = Order(floor,order_type, order_set)
+                order_matrix[i].append(order)
+        OrderMatrix.m_order_matrix = order_matrix
+        #return order_matrix
+        
+
 
     def order_get_top(self, floor):
         order = OrderMatrix.m_order_matrix[config.N_FLOORS-1][config.ELEV_ID]
@@ -88,8 +121,11 @@ class OrderMatrix():
         return order
 
     def order_stop_at_floor(self, direction, current_floor):
+        #print("floor:", current_floor, "\torder_type:", OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type)
         if(direction == config.DIRN_DOWN):
-            if(OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_set == 1 and OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type == config.BUTTON_CALL_DOWN):
+            #print("ordertype: ", OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type)
+            #print("1: ", OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_set == 1, "\t2: ", OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type == (config.BUTTON_CALL_DOWN or config.BUTTON_MULTI))
+            if(OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_set == 1 and (OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type == config.BUTTON_CALL_DOWN or OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type == config.BUTTON_MULTI)):
                 return 1
             elif(OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_set == 1 and OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type == config.BUTTON_COMMAND):
                 return 1
@@ -99,9 +135,10 @@ class OrderMatrix():
                 return 1
         
         elif(direction == config.DIRN_UP):
-            if(OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_set == 1 and OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type == config.BUTTON_CALL_UP):
+            #print("ordertype: ", OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type)
+            if(OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_set == 1 and (OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type == config.BUTTON_CALL_UP or OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type == config.BUTTON_MULTI)):
                 return 1
-            elif(OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_set == 1 and OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type == config.BUTTON_COMMAND):
+            elif(OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_set == 1 and OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type == (config.BUTTON_COMMAND or config.BUTTON_MULTI)):
                 return 1
             elif(self.order_get_top(current_floor).floor == current_floor and self.order_get_top(current_floor).order_set == 1):
                 return 1
@@ -120,19 +157,13 @@ class OrderMatrix():
                 return 1
 
 
-    
 
+def test_json():
+    o = OrderMatrix()
+    order = Order(1,1,1)
+    o.order_add(order)
+    #print(o.m_order_matrix[1][0].order_set)
+    json = o.order_json_encode_order_matrix()
+    o.order_json_decode_order_matrix(json)
 
-def test():
-    l = Order(3,1,1)
-    h = OrderMatrix()
-    #print(h.m_order_matrix[0][0].order_set)
-    #h.order_add(l)
-    #print(h.order_get_top(0).floor)
-    #print(h.m_order_matrix[0][0].floor)
-    #l.m_order_matrix[0][0] = 1
-    #print(h.m_order_matrix)
-    #l.order_get_order_matrix(1,1)
-    #h.order_poll_buttons()
-
-#print(test())
+test_json()

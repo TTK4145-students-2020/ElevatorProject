@@ -16,7 +16,6 @@ class Network:
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
             self.sock.settimeout(3)
-
             online_elevators[ID] = 1
         except:
             pass 
@@ -26,7 +25,7 @@ class Network:
         
     def disconnect_node(self):     
     # Disconnects a connection.
-        online_elevators[self.ID] = 0
+        Network.online_elevators[self.ID] = 0
         self.sock.shutdown()
         self.sock.close()
 
@@ -38,8 +37,7 @@ class Network:
     # Listens given port all the time.
         self.sock.bind(("", port))
         json_packet, address = self.sock.recvfrom(1024)
-        print(json_packet)
+        #print(json_packet)
         return json_packet, address
 
-#get ip.
 
