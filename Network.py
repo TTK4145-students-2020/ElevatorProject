@@ -37,13 +37,18 @@ class Network:
             print("error")
 
     def UDP_listen(self, port):
-    # Listens given port all the time.
+    # Listens given port.
         try:
             self.sock.bind(("", port))
             json_packet, address = self.sock.recvfrom(1024)
+            #json_packet = json_packet.decode(encoding="ascii")
             return json_packet, address
         except socket.timeout:
+            print("timeout")
+        except:
             print("error")
+
+
         
         
 

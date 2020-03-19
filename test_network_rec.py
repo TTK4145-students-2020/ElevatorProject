@@ -10,18 +10,28 @@ o.order_add(order)
 json = o.order_json_encode_order_matrix()
 json = bytes(json, "ascii")
 network = Network.Network(ID = 0)
+#json = json.decode(encoding='ascii')
 
 
 
 def send(json):
-    
     while True:
-        network.UDP_broadcast(json, "<broadcast>", 20008)
+        network.UDP_broadcast(json, "", 20008)
 
 def recv():
-    #network = Network.Network(ID = 1)
-    while True:
-        network.UDP_listen(20008)
+    hei, address = network.UDP_listen(20008)
+    #print(hei)
+    #try:
+    json = hei.decode(encoding='ascii')
+    o.order_json_decode_order_matrix(json)
+    #print(o.m_order_matrix)
+    #except:
+        #print("couldnt fix order matrix")
+
+
+def test():
+    o.order_json_decode_order_matrix(json)
+    print(o.m_order_matrix)
 
 
 recv()
