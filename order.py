@@ -33,7 +33,6 @@ class OrderMatrix():
 
     def order_add(self, order):
         if(OrderMatrix.m_order_matrix[order.floor][order.ELEV_ID].order_set == 1 and OrderMatrix.m_order_matrix[order.floor][order.ELEV_ID].order_type != order.order_type):
-            #print("hallalalalal\n")
             order.order_type = config.BUTTON_MULTI
         order.order_set = 1
         OrderMatrix.m_order_matrix[order.floor][order.ELEV_ID] = order
@@ -98,7 +97,6 @@ class OrderMatrix():
                 order = Order(floor,order_type, order_set)
                 order_matrix[i].append(order)
         OrderMatrix.m_order_matrix = order_matrix
-        #return order_matrix
         
 
 
@@ -121,10 +119,8 @@ class OrderMatrix():
         return order
 
     def order_stop_at_floor(self, direction, current_floor):
-        #print("floor:", current_floor, "\torder_type:", OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type)
+        
         if(direction == config.DIRN_DOWN):
-            #print("ordertype: ", OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type)
-            #print("1: ", OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_set == 1, "\t2: ", OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type == (config.BUTTON_CALL_DOWN or config.BUTTON_MULTI))
             if(OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_set == 1 and (OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type == config.BUTTON_CALL_DOWN or OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type == config.BUTTON_MULTI)):
                 return 1
             elif(OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_set == 1 and OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type == config.BUTTON_COMMAND):
@@ -135,7 +131,7 @@ class OrderMatrix():
                 return 1
         
         elif(direction == config.DIRN_UP):
-            #print("ordertype: ", OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type)
+            
             if(OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_set == 1 and (OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type == config.BUTTON_CALL_UP or OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type == config.BUTTON_MULTI)):
                 return 1
             elif(OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_set == 1 and OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type == (config.BUTTON_COMMAND or config.BUTTON_MULTI)):

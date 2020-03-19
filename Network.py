@@ -8,7 +8,7 @@ from threading import Thread
 
 class Network:
     online_elevators = [0]*config.NUMBER_OF_ELEVATORS
-    def __init__(self, IP_address, port, ID):
+    def __init__(self, ID): #IP_address, port,
     #Sets the broadcasting settings and connect.
         try:
             self.ID = ID
@@ -31,13 +31,20 @@ class Network:
 
     def UDP_broadcast(self, json_packet, IP_address, port):
     # Broadcaster given packet to network.
-        self.sock.sendto(json_packet, (IP_address,port))
+        try:
+            self.sock.sendto(json_packet, (IP_address,port))
+        except socket.timeout:
+            print("error")
 
     def UDP_listen(self, port):
     # Listens given port all the time.
-        self.sock.bind(("", port))
-        json_packet, address = self.sock.recvfrom(1024)
-        #print(json_packet)
-        return json_packet, address
+        try:
+            self.sock.bind(("", port))
+            json_packet, address = self.sock.recvfrom(1024)
+            return json_packet, address
+        except socket.timeout:
+            print("error")
+        
+        
 
 
