@@ -123,16 +123,6 @@ class Fsm:
                     self.m_next_state = config.IDLE
 
 
-def run_elevator():
-    elev = Fsm()
-    heis.elevator_hardware_init()
-    elev.fsm_init()
-    elev.fsm_run()
-
-
-
-
-run_elevator()
 
 
 

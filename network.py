@@ -15,6 +15,7 @@ class Network:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+            self.sock.bind(("", 20000))
             self.sock.settimeout(3)
             online_elevators[ID] = 1
         except:
@@ -23,7 +24,7 @@ class Network:
     #def connect_node(self, IP_address, port):
     #This function make a connection with another.
         
-    def disconnect_node(self):     
+    def disconnect_node(self, port):     
     # Disconnects a connection.
         Network.online_elevators[self.ID] = 0
         self.sock.shutdown()
@@ -39,14 +40,17 @@ class Network:
     def UDP_listen(self, port):
     # Listens given port.
         try:
-            self.sock.bind(("", port))
             json_packet, address = self.sock.recvfrom(1024)
-            #json_packet = json_packet.decode(encoding="ascii")
+            json_packet = json_packet.decode(encoding="ascii")
+
             return json_packet, address
         except socket.timeout:
-            print("timeout")
+            return port
         except:
-            print("error")
+            return -1
+
+
+
 
 
         
