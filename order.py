@@ -39,27 +39,35 @@ class OrderMatrix():
     
     def order_poll_buttons(self):
         order = Order(-1,-1, -1)
+        order_received = 0
         for i in range(config.N_FLOORS):
             if(heis.elevator_hardware_get_button_signal(config.BUTTON_COMMAND, i)):
+                order_received = 1
                 order.floor = i
                 order.order_type = config.BUTTON_COMMAND
                 #order.order_set = 1
                 self.order_add(order)
                 heis.elevator_hardware_set_button_lamp(config.BUTTON_COMMAND,i,1)
+                return order_received
 
             if(heis.elevator_hardware_get_button_signal(config.BUTTON_CALL_DOWN, i)):
+                order_received = 1
                 order.floor = i
                 order.order_type = config.BUTTON_CALL_DOWN
                 #order.order_set = 1
                 self.order_add(order)
                 heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_DOWN,i,1)
+                return order_received
             
             if(heis.elevator_hardware_get_button_signal(config.BUTTON_CALL_UP, i)):
+                order_received = 1
                 order.floor = i
                 order.order_type = config.BUTTON_CALL_UP
                 #order.order_set = 1
                 self.order_add(order)
                 heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_UP,i,1)
+                return order_received
+        return order_received
     
     def order_clear_floor(self, floor):
         #for i in range(config.N_BUTTONS):
@@ -78,8 +86,6 @@ class OrderMatrix():
             if(OrderMatrix.m_order_matrix[floor][i].order_set == 1):
                 return 1
         return 0
-    
-
 
     def order_json_encode_order_matrix(self):
         json_packet = json.dumps(OrderMatrix.m_order_matrix, cls=MyEncoder)
@@ -96,9 +102,22 @@ class OrderMatrix():
                 order_set = json_packet[i][j]["order_set"]
                 order = Order(floor,order_type, order_set)
                 order_matrix[i].append(order)
-        OrderMatrix.m_order_matrix = order_matrix
-        
+            #OrderMatrix.m_order_matrix[i] = order_matrix
+        return order_matrix
+    
+    def order_json_encode_position_matrix(self, pos_matrix):
+        return json.dumps(pos_matrix)
 
+    def order_json_decode_position_matrix(self, json_pos_matrix):
+        json_packet = json.JSONDecoder().decode(json_pos_matrix)
+        m_position_matrix = []
+        for i in range(config.N_FLOORS + 1):
+            m_position_matrix.append([])
+            for j in range(config.N_ELEVATORS):
+                m_position_matrix[i].append(json_packet[i][j])
+
+        return m_position_matrix
+            
 
     def order_get_top(self, floor):
         order = OrderMatrix.m_order_matrix[config.N_FLOORS-1][config.ELEV_ID]
@@ -161,5 +180,3 @@ def test_json():
     #print(o.m_order_matrix[1][0].order_set)
     json = o.order_json_encode_order_matrix()
     o.order_json_decode_order_matrix(json)
-
-test_json()

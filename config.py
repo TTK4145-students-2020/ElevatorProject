@@ -1,8 +1,9 @@
 
-N_ELEVATORS = 3
+N_ELEVATORS = 2
 N_FLOORS = 4
 N_BUTTONS = 3
 ELEV_ID = 0
+BASE_ELEVATOR_PORT = 20000 #id 0, add 1 for every other elevator
 
 #elevator direction
 DIRN_DOWN = -1
@@ -21,4 +22,4 @@ IDLE = 0
 RUN = 1
 DOOR_OPEN = 2
 
-NUMBER_OF_ELEVATORS = 3
+NUMBER_OF_ELEVATORS = 2

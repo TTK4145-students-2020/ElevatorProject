@@ -2,12 +2,16 @@ from ctypes import *
 from ctypes.util import find_library
 import config
 import order
+import network
+
 
 
 heis = cdll.LoadLibrary("petter/driver.so")
 
 class Fsm:
     queue = order.OrderMatrix()
+    #netw = network.Network(config.ELEV_ID)
+    #send_position = False
 
     #create position matrix
     m_position_matrix = []
@@ -32,11 +36,11 @@ class Fsm:
                 Fsm.m_position_matrix[i][config.ELEV_ID] = 0
             Fsm.m_position_matrix[pos][config.ELEV_ID] = 1
             Fsm.m_position_matrix[config.N_FLOORS][config.ELEV_ID] = self.m_direction
-        #print(Fsm.m_position_matrix)
 
     def fsm_init(self):
         print("=======fsm init=======")
         self.m_prev_registered_floor = 0
+        Fsm.m_position_matrix[0][config.ELEV_ID] = 1
         self.m_direction = config.DIRN_STOP
         Fsm.queue.order_clear_all()
         if (heis.elevator_hardware_get_floor_sensor_signal() == 0):
@@ -88,8 +92,7 @@ class Fsm:
             while(self.m_next_state == config.RUN): #run state
                 heis.elevator_hardware_set_motor_direction(self.m_direction)
                 Fsm.queue.order_poll_buttons()
-                #json = Fsm.queue.order_json_encode_order_matrix()
-                #Fsm.queue.order_json_decode_order_matrix(json)
+
                 if(self.fsm_get_current_floor() != -1):
                     valid_floor = self.fsm_get_current_floor()
                     self.fsm_update_position()
@@ -97,7 +100,7 @@ class Fsm:
                     if(valid_floor != -1):
                         self.m_prev_registered_floor = valid_floor
                         heis.elevator_hardware_set_floor_indicator(valid_floor)
-                    #print("direction:", self.m_direction)
+                    
                     if(Fsm.queue.order_stop_at_floor(self.m_direction, self.m_prev_registered_floor)):
                         self.m_next_state = config.DOOR_OPEN
                         break
