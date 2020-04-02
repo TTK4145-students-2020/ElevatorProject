@@ -1,11 +1,13 @@
 import socket
 import config
 #from multiprocessing import Process, SimpleQueue
+from ctypes import *
+from ctypes.util import find_library
 from threading import Thread
 import fsm
 import order
 
-
+heis = cdll.LoadLibrary("petter/driver.so")
 
 class Network:
     online_elevators = [0]*config.N_ELEVATORS
@@ -57,43 +59,53 @@ class Network:
         #except:
          #   return port
         
-    def msg_receive_handler(self):
+    def msg_receive_handler(self, elevator):
         
         while True:
-
+            #print(Network.online_elevators)
             for i in range(config.N_ELEVATORS):
                 if(i != config.ELEV_ID):
                     msg = self.UDP_listen(config.BASE_ELEVATOR_PORT+i)
                     if(isinstance(msg, int) == 0):
                         Network.online_elevators[i] = 1
-                        try:
-                            print("halla")
-                            position_matrix = fsm.Fsm.queue.order_json_decode_position_matrix(msg[0])
-                            for j in range (config.N_FLOORS):
-                                fsm.Fsm.m_position_matrix[j][i] = position_matrix[j][i]
-                        except:
-                            pass
-                        try:
-                            print("hei")
-                            order_matrix = fsm.Fsm.queue.order_json_decode_order_matrix(msg[0])
-                            for j in range (config.N_FLOORS):
-                                fsm.Fsm.m_position_matrix[j][i] = position_matrix[j][i]
-                        except:
-                            pass
                         if(msg[0] != "alive"):
-                            self.UDP_broadcast(bytes("alive","ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID)                            
+                            try:
+                                position_matrix = elevator.queue.order_json_decode_position_matrix(msg[0])
+                                
+                                for j in range (config.N_FLOORS + 1):
+                                    elevator.m_position_matrix[j][i] = position_matrix[j][i]
+                                #print("mottok pos matrix")
+                            except:
+                                pass
+                            try:
+                                #print(msg[0])
+                                order_matrix = elevator.queue.order_json_decode_order_matrix(msg[0])
+                                
+                                for j in range (config.N_FLOORS):
+                                    elevator.queue.m_order_matrix[j][i] = order_matrix[j][i]
+                                #print("mottok order matrix")
+                            except:
+                                pass
+
+                            self.UDP_broadcast(bytes("alive","ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID) 
+
                     else:
                         Network.online_elevators[msg-config.BASE_ELEVATOR_PORT] = 0
 
-    def msg_send_handler(self):
+    def msg_send_handler(self, elevator):
+        heis.timer_start()
         while True:
-            pass
-            #if(fsm.Fsm.queue.order_poll_buttons()):
-                #print("sender")
-                #self.UDP_broadcast(bytes(fsm.encoded_order_matrix, "ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID)
-            #if(fsm.Fsm.fsm_get_current_floor() != -1 and fsm.Fsm.m_prev_registered_floor != fsm.Fsm.fsm_get_current_floor()):
-                #print("sender bøsss")
-                #self.UDP_broadcast(bytes(encoded_order_matrix, "ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID)
+            if(heis.timer_expire() == 1):
+                self.UDP_broadcast(bytes("alive", "ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID)
+                heis.timer_start()
+            if(elevator.queue.order_poll_buttons()):
+                #print("sender order matrix")
+                self.UDP_broadcast(bytes(elevator.queue.order_json_encode_order_matrix(), "ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID)
+            if(elevator.fsm_get_current_floor() != -1): #and elevator.m_prev_registered_floor != elevator.fsm_get_current_floor()):
+                #print("sender pos matrix")
+                self.UDP_broadcast(bytes(elevator.queue.order_json_encode_position_matrix(elevator.m_position_matrix), "ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID)
+            if(elevator.m_next_state == config.DOOR_OPEN):
+               self.UDP_broadcast(bytes(elevator.queue.order_json_encode_order_matrix(), "ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID)
 
 
 

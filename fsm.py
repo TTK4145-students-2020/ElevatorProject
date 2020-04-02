@@ -113,12 +113,18 @@ class Fsm:
                 heis.elevator_hardware_set_door_open_lamp(1)
                 heis.timer_start()
 
+
                 while(True):
                     Fsm.queue.order_poll_buttons()
                     Fsm.queue.order_clear_floor(self.m_prev_registered_floor)
                     if(heis.timer_expire() == 1):
                         heis.elevator_hardware_set_door_open_lamp(0)
                         break                
+                ################################ test
+                Fsm.queue.print_order_matrix(Fsm.queue.m_order_matrix)
+                print("-------pos matrix-------")
+                print(Fsm.m_position_matrix)
+
                 if(Fsm.queue.order_continue(self.m_direction, self.m_prev_registered_floor)):
                     self.m_next_state = config.RUN
                 

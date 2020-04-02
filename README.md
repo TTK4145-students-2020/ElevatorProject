@@ -1,13 +1,12 @@
 # ElevatorProject
 
 ### Running several elevators with the simulator
-- run simulator in one terminal and "run_elevator_2()" from main.py in another.
-- change the last number of the port in simulator.con
-- change the port number in elevator_hardware.c 
+- run simulator in one terminal and main.py in another.
+- change ELEV_ID in config.py (starting ID is 0)
+- change the last number of the port in simulator.con 
+- change the port number in elevator_hardware.c (port has to be the same as above)
 - run the compile command below
-- same as 1 but running "run_elvator_1()" instead.
-
-run fsm.py file after compiling with the command below to run with one elevator.
+- now run a second simulator in a new terminal and main.py in another
 
 **Command to compile drivers to use python fsm and order module, must be run in the folder "petter":**
 gcc --std=gnu11 -shared -fPIC timer.c driver/elevator_hardware.c -o driver.so /usr/local/lib/libcomedi.so

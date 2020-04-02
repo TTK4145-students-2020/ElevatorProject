@@ -172,6 +172,13 @@ class OrderMatrix():
                 return 1
 
 
+    ###### skal fjernes, bare for at det skal være lett å se ordre matrisen
+    def print_order_matrix(self, order_matrix):
+        print("--------order matrix------")
+        for i in range(config.N_FLOORS):
+            print(order_matrix[i][0].order_set, "\t", order_matrix[i][1].order_set)
+
+
 
 def test_json():
     o = OrderMatrix()

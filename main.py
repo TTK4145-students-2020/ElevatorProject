@@ -17,9 +17,8 @@ def main():
     heis.elevator_hardware_init()
     elev.fsm_init()
     p1 = Thread(target= elev.fsm_run)
-    p2 = Thread(target= netw.msg_receive_handler)
-    p3 = Thread(target= netw.msg_send_handler)
-    #p2 = Thread(target= netw.UDP_listen, args=(20000,))
+    p2 = Thread(target= netw.msg_receive_handler, args=(elev,))
+    p3 = Thread(target= netw.msg_send_handler, args=(elev,))
     
     p1.start()
     p2.start()

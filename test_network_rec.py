@@ -35,10 +35,16 @@ def network_test():
 
 
 def send(json):
-    while True:
-        print("printer")
-        #time.sleep(1)
-        netw.UDP_broadcast(json, "", 20000)
+    try:
+        print("ja")
+        fsadjfklsd
+        print("nei")
+        while True:
+            print("printer")
+            #time.sleep(1)
+            netw.UDP_broadcast(json, "", 20000)
+    except:
+        pass
 
 def recv():
     
@@ -69,4 +75,4 @@ def thread_test_rcv():
     p1 = Thread(target= recv)
     p1.start()
 
-thread_test_send()
+send(melding)
