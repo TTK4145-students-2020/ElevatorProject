@@ -2,6 +2,7 @@ from ctypes import *
 from ctypes.util import find_library
 import json
 import config
+import subprocess
 
 heis = cdll.LoadLibrary("petter/driver.so")
 
@@ -27,48 +28,149 @@ class OrderMatrix():
     for i in range(config.N_FLOORS):
         m_order_matrix.append([])
         for j in range(config.N_ELEVATORS):
-            order = Order(i,-1, -1)
+            order = Order(i,0, 0)
             m_order_matrix[i].append(order)
 
+    def order_add(self, order, pos_matrix):
+        if(order.order_type == config.BUTTON_COMMAND):
+            if(OrderMatrix.m_order_matrix[order.floor][config.ELEV_ID].order_set == 1 and OrderMatrix.m_order_matrix[order.floor][config.ELEV_ID].order_type != order.order_type):
+                order.order_type = config.BUTTON_MULTI
+            order.order_set = 1
+            OrderMatrix.m_order_matrix[order.floor][config.ELEV_ID] = order
 
-    def order_add(self, order):
-        if(OrderMatrix.m_order_matrix[order.floor][order.ELEV_ID].order_set == 1 and OrderMatrix.m_order_matrix[order.floor][order.ELEV_ID].order_type != order.order_type):
-            order.order_type = config.BUTTON_MULTI
-        order.order_set = 1
-        OrderMatrix.m_order_matrix[order.floor][order.ELEV_ID] = order
+        else:
+            elev_id = self.order_designate_elevator(pos_matrix, order)
+            print("elev_id:", elev_id)
+            if(OrderMatrix.m_order_matrix[order.floor][elev_id].order_set == 1 and OrderMatrix.m_order_matrix[order.floor][elev_id].order_type != order.order_type):
+                order.order_type = config.BUTTON_MULTI
+            order.order_set = 1
+            OrderMatrix.m_order_matrix[order.floor][elev_id] = order
     
-    def order_poll_buttons(self):
+    def order_poll_buttons(self, pos_matrix, online_elevators):
+        #print(sum(online_elevators))
+
         order = Order(-1,-1, -1)
-        order_received = 0
+        order_is_received = 0
         for i in range(config.N_FLOORS):
             if(heis.elevator_hardware_get_button_signal(config.BUTTON_COMMAND, i)):
-                order_received = 1
+                order_is_received = 1
                 order.floor = i
                 order.order_type = config.BUTTON_COMMAND
                 #order.order_set = 1
-                self.order_add(order)
+                self.order_add(order, pos_matrix)
                 heis.elevator_hardware_set_button_lamp(config.BUTTON_COMMAND,i,1)
-                return order_received
+                return order_is_received
 
             if(heis.elevator_hardware_get_button_signal(config.BUTTON_CALL_DOWN, i)):
-                order_received = 1
+                if(sum(online_elevators) <= 1):
+                    return    
+                order_is_received = 1
                 order.floor = i
                 order.order_type = config.BUTTON_CALL_DOWN
                 #order.order_set = 1
-                self.order_add(order)
+                self.order_add(order, pos_matrix)
                 heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_DOWN,i,1)
-                return order_received
-            
+                return order_is_received
             if(heis.elevator_hardware_get_button_signal(config.BUTTON_CALL_UP, i)):
-                order_received = 1
+                if(sum(online_elevators) <= 1):
+                    return    
+                order_is_received = 1
                 order.floor = i
                 order.order_type = config.BUTTON_CALL_UP
                 #order.order_set = 1
-                self.order_add(order)
+                self.order_add(order, pos_matrix)
                 heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_UP,i,1)
-                return order_received
-        return order_received
+                return order_is_received
+        return order_is_received
     
+    def order_designate_elevator(self, pos_matrix, order):
+        cab_req_elev_0 = [False, False, False, False]
+        cab_req_elev_1 = [False, False, False, False]
+        hall_req = [[False,False],[False,False],[False,False],[False,False]]
+        position_elev_0 = 0
+        position_elev_1 = 0
+        direction_elev_0 = "stop"
+        direction_elev_1 = "stop"
+        behaviour_elev_0 = "moving"
+        behaviour_elev_1 = "moving"
+
+
+
+        #print("order floor:", order.floor, "order type:", order.order_type)
+        if(order.order_type == config.BUTTON_CALL_UP):
+      
+            hall_req[order.floor][0] = True
+        
+        elif(order.order_type == config.BUTTON_CALL_DOWN):
+  
+            hall_req[order.floor][1] = True
+
+        #print("hallreq", hall_req)
+        for i in range(config.N_FLOORS):
+            if(pos_matrix[i][0] == 1):
+                position_elev_0 = i
+            if(pos_matrix[i][1] == 1):
+                position_elev_1 = i
+
+            if(OrderMatrix.m_order_matrix[i][0].order_set == 1 and (OrderMatrix.m_order_matrix[i][0].order_type == config.BUTTON_COMMAND or OrderMatrix.m_order_matrix[i][0].order_type == config.BUTTON_MULTI)):
+                cab_req_elev_0[i] = True
+            if(OrderMatrix.m_order_matrix[i][1].order_set == 1 and (OrderMatrix.m_order_matrix[i][1].order_type == config.BUTTON_COMMAND or OrderMatrix.m_order_matrix[i][1].order_type == config.BUTTON_MULTI)):
+                cab_req_elev_1[i] = True
+
+
+        if(pos_matrix[config.N_FLOORS][0] == -1):
+            direction_elev_0 = "down"
+        elif(pos_matrix[config.N_FLOORS][0] == 1):
+            direction_elev_0 = "up"
+        else:
+            direction_elev_0 = "stop"
+        
+        if(pos_matrix[config.N_FLOORS][1] == -1):
+            direction_elev_1 = "down"
+        elif(pos_matrix[config.N_FLOORS][1] == 1):
+            direction_elev_1 = "stop"
+        else:
+            direction_elev_1 = "stop"
+
+
+
+
+
+        input = {
+            "hallRequests" : hall_req,
+            "states" : {
+                "zero" : {
+                    "behaviour" : behaviour_elev_0,
+                    "floor" : position_elev_0,
+                    "direction" : direction_elev_0,
+                    "cabRequests" : cab_req_elev_0
+                },
+                "one" : {
+                    "behaviour": behaviour_elev_1,
+                    "floor" : position_elev_1,
+                    "direction" : direction_elev_1,
+                    "cabRequests" : cab_req_elev_1  
+                }
+            }
+        }
+        json_packet = json.dumps(input)
+        #print("input:", input)
+        json_packet = bytes(json_packet, "ascii")
+        process = subprocess.run(["./ProjectResources-master/cost_fns/hall_request_assigner/hall_request_assigner", "--input", json_packet], check=True, stdout=subprocess.PIPE, universal_newlines=True)
+        output = process.stdout
+        output = json.loads(output)
+        #print("one:", output["one"])
+        #print("zero:", output["zero"])
+        
+        for i in range(config.N_FLOORS):
+            for j in range(2):
+                if(output["zero"][i][j] == True):
+                    return 0
+                if(output["one"][i][j] == True):
+                    return 1
+
+
+
     def order_clear_floor(self, floor):
         #for i in range(config.N_BUTTONS):
         OrderMatrix.m_order_matrix[floor][config.ELEV_ID].order_set = 0
@@ -183,7 +285,7 @@ class OrderMatrix():
 def test_json():
     o = OrderMatrix()
     order = Order(1,1,1)
-    o.order_add(order)
+    o.order_add(order, pos_matrix)
     #print(o.m_order_matrix[1][0].order_set)
     json = o.order_json_encode_order_matrix()
     o.order_json_decode_order_matrix(json)

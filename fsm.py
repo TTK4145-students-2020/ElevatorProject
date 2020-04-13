@@ -57,14 +57,16 @@ class Fsm:
                     self.m_next_state = config.IDLE
                     break
 
-    def fsm_run(self):
+    def fsm_run(self, online_elevators):
         print("=======fsm run=======")
         while(True):
            
             while(self.m_next_state == config.IDLE):  #idle state
-
+                                #####print order matrix
+                #Fsm.queue.print_order_matrix(Fsm.queue.m_order_matrix)
+                self.m_direction = config.DIRN_STOP
                 heis.elevator_hardware_set_motor_direction(config.DIRN_STOP)
-                Fsm.queue.order_poll_buttons()
+                Fsm.queue.order_poll_buttons(Fsm.m_position_matrix, online_elevators)
 
                 if(self.fsm_get_current_floor() == -1 and Fsm.queue.order_is_set(self.m_prev_registered_floor)):
                     self.m_next_state = config.RUN
@@ -90,8 +92,10 @@ class Fsm:
             
 
             while(self.m_next_state == config.RUN): #run state
+                #####print order matrix
+                #Fsm.queue.print_order_matrix(Fsm.queue.m_order_matrix)
                 heis.elevator_hardware_set_motor_direction(self.m_direction)
-                Fsm.queue.order_poll_buttons()
+                Fsm.queue.order_poll_buttons(Fsm.m_position_matrix, online_elevators)
 
                 if(self.fsm_get_current_floor() != -1):
                     valid_floor = self.fsm_get_current_floor()
@@ -109,21 +113,22 @@ class Fsm:
                         self.m_next_state = config.IDLE
 
             while(self.m_next_state == config.DOOR_OPEN): #door open state
+                self.fsm_update_position()
                 heis.elevator_hardware_set_motor_direction(config.DIRN_STOP)
                 heis.elevator_hardware_set_door_open_lamp(1)
                 heis.timer_start()
 
 
                 while(True):
-                    Fsm.queue.order_poll_buttons()
+                    Fsm.queue.order_poll_buttons(Fsm.m_position_matrix, online_elevators)
                     Fsm.queue.order_clear_floor(self.m_prev_registered_floor)
                     if(heis.timer_expire() == 1):
                         heis.elevator_hardware_set_door_open_lamp(0)
                         break                
                 ################################ test
-                Fsm.queue.print_order_matrix(Fsm.queue.m_order_matrix)
-                print("-------pos matrix-------")
-                print(Fsm.m_position_matrix)
+                
+                #print("-------pos matrix-------")
+                #print(Fsm.m_position_matrix)
 
                 if(Fsm.queue.order_continue(self.m_direction, self.m_prev_registered_floor)):
                     self.m_next_state = config.RUN

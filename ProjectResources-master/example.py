@@ -3,15 +3,15 @@ import json
 
 input = {
     "hallRequests" : 
-        [[False,False],[True,False],[False,False],[False,True]],
+        [[False,False],[False,False],[False,False],[False,False]],
     "states" : {
-        "one" : {
+        "zero" : {
             "behaviour":"moving",
             "floor":2,
             "direction":"up",
-            "cabRequests":[False,False,True,True]
+            "cabRequests":[False,False,False,True]
         },
-        "two" : {
+        "one" : {
             "behaviour":"idle",
             "floor":0,
             "direction":"stop",
@@ -23,7 +23,8 @@ input = {
 json_packet = json.dumps(input)
 json_packet = bytes(json_packet, "ascii")
 
-process = subprocess.run(["./hall_request_assigner", "--input", json_packet], check=True, stdout=subprocess.PIPE, universal_newlines=True)
+process = subprocess.run(["./cost_fns/hall_request_assigner/hall_request_assigner", "--input", json_packet], check=True, stdout=subprocess.PIPE, universal_newlines=True)
 output = process.stdout
-
+output = json.loads(output)
+#print(output["one"][1][1])
 print(output)

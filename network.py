@@ -63,6 +63,7 @@ class Network:
         
         while True:
             #print(Network.online_elevators)
+            
             for i in range(config.N_ELEVATORS):
                 if(i != config.ELEV_ID):
                     msg = self.UDP_listen(config.BASE_ELEVATOR_PORT+i)
@@ -80,10 +81,22 @@ class Network:
                             try:
                                 #print(msg[0])
                                 order_matrix = elevator.queue.order_json_decode_order_matrix(msg[0])
-                                
-                                for j in range (config.N_FLOORS):
-                                    elevator.queue.m_order_matrix[j][i] = order_matrix[j][i]
+                                #elevator.queue.print_order_matrix(order_matrix)
+                                #Fsm.queue.print_order_matrix(order_matrix)
+                                for k in range(config.N_ELEVATORS):
+                                    for j in range (config.N_FLOORS):
+                                        elevator.queue.m_order_matrix[j][k] = order_matrix[j][k]
+                                        #print("j:",j,"k:",k,"type:", elevator.queue.m_order_matrix[j][k].order_type)
+                                        ##print("1.", elevator.queue.m_order_matrix[j][k].order_set == 1)
+                                        #print("2.", elevator.queue.m_order_matrix[j][k].order_type != config.BUTTON_COMMAND or elevator.queue.m_order_matrix[j][k].order_type != config.BUTTON_MULTI)
+                                        if(elevator.queue.m_order_matrix[j][k].order_set == 1 and elevator.queue.m_order_matrix[j][k].order_type != config.BUTTON_COMMAND and elevator.queue.m_order_matrix[j][k].order_type != config.BUTTON_MULTI):
+                                            heis.elevator_hardware_set_button_lamp(elevator.queue.m_order_matrix[j][k].order_type,j,1)
+                                        elif(elevator.queue.m_order_matrix[j][k].order_set == 0 and elevator.queue.m_order_matrix[j][k].order_type != config.BUTTON_MULTI):
+                                            heis.elevator_hardware_set_button_lamp(elevator.queue.m_order_matrix[j][k].order_type,j,0)
+
+                                    #elevator.queue.print_order_matrix(elevator.queue.m_order_matrix)
                                 #print("mottok order matrix")
+                                #elevator.queue.print_order_matrix(elevator.queue.m_order_matrix)
                             except:
                                 pass
 
@@ -98,14 +111,16 @@ class Network:
             if(heis.timer_expire() == 1):
                 self.UDP_broadcast(bytes("alive", "ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID)
                 heis.timer_start()
-            if(elevator.queue.order_poll_buttons()):
+            if(elevator.queue.order_poll_buttons(elevator.m_position_matrix, Network.online_elevators)):
                 #print("sender order matrix")
                 self.UDP_broadcast(bytes(elevator.queue.order_json_encode_order_matrix(), "ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID)
             if(elevator.fsm_get_current_floor() != -1): #and elevator.m_prev_registered_floor != elevator.fsm_get_current_floor()):
                 #print("sender pos matrix")
+                
                 self.UDP_broadcast(bytes(elevator.queue.order_json_encode_position_matrix(elevator.m_position_matrix), "ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID)
             if(elevator.m_next_state == config.DOOR_OPEN):
-               self.UDP_broadcast(bytes(elevator.queue.order_json_encode_order_matrix(), "ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID)
+                
+                self.UDP_broadcast(bytes(elevator.queue.order_json_encode_order_matrix(), "ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID)
 
 
 
