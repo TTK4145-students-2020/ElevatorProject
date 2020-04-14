@@ -6,7 +6,7 @@ import subprocess
 
 heis = cdll.LoadLibrary("petter/driver.so")
 
-BUTTON_COMMAND = 2
+
 
 class MyEncoder(json.JSONEncoder):
     def default(self, o):

@@ -30,11 +30,11 @@ class Network:
     #def connect_node(self, IP_address, port):
     #This function make a connection with another.
         
-    def disconnect_node(self, port):     
+    """def disconnect_node(self, port):     
     # Disconnects a connection.
         Network.online_elevators[self.ID] = 0
         self.sock.shutdown()
-        self.sock.close()
+        self.sock.close()"""
 
     def UDP_broadcast(self, json_packet, IP_address, port):
     # Broadcaster given packet to network.
