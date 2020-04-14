@@ -2,7 +2,7 @@
 N_ELEVATORS = 2
 N_FLOORS = 4
 N_BUTTONS = 3
-ELEV_ID = 0
+ELEV_ID = 1
 BASE_ELEVATOR_PORT = 20000 
 
 #elevator direction

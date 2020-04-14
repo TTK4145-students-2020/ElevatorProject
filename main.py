@@ -4,7 +4,7 @@ from ctypes import *
 from ctypes.util import find_library
 import config
 import order
-from threading import Thread
+from threading import Thread, Lock
 import time
 
 heis = cdll.LoadLibrary("petter/driver.so")
@@ -16,7 +16,6 @@ def main():
     elev = fsm.Fsm()
     heis.elevator_hardware_init()
     elev.fsm_init()
-    #print("online elevators: ", netw.online_elevators)
     p1 = Thread(target= elev.fsm_run, args=(netw.online_elevators,))
     p2 = Thread(target= netw.msg_receive_handler, args=(elev,))
     p3 = Thread(target= netw.msg_send_handler, args=(elev,))

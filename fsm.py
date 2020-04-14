@@ -35,7 +35,10 @@ class Fsm:
             for i in range(config.N_FLOORS):
                 Fsm.m_position_matrix[i][config.ELEV_ID] = 0
             Fsm.m_position_matrix[pos][config.ELEV_ID] = 1
-            Fsm.m_position_matrix[config.N_FLOORS][config.ELEV_ID] = self.m_direction
+            if(self.m_next_state == config.IDLE or self.m_next_state == config.DOOR_OPEN):
+                Fsm.m_position_matrix[config.N_FLOORS][config.ELEV_ID] = 0
+            else:
+                Fsm.m_position_matrix[config.N_FLOORS][config.ELEV_ID] = self.m_direction
 
     def fsm_init(self):
         print("=======fsm init=======")
@@ -64,7 +67,10 @@ class Fsm:
             while(self.m_next_state == config.IDLE):  #idle state
                                 #####print order matrix
                 #Fsm.queue.print_order_matrix(Fsm.queue.m_order_matrix)
-                self.m_direction = config.DIRN_STOP
+                ######
+                #print(self.m_direction)
+                #self.m_direction = config.DIRN_STOP
+                #self.fsm_update_position()
                 heis.elevator_hardware_set_motor_direction(config.DIRN_STOP)
                 Fsm.queue.order_poll_buttons(Fsm.m_position_matrix, online_elevators)
 
@@ -94,6 +100,8 @@ class Fsm:
             while(self.m_next_state == config.RUN): #run state
                 #####print order matrix
                 #Fsm.queue.print_order_matrix(Fsm.queue.m_order_matrix)
+                #print(self.m_direction)
+
                 heis.elevator_hardware_set_motor_direction(self.m_direction)
                 Fsm.queue.order_poll_buttons(Fsm.m_position_matrix, online_elevators)
 
@@ -113,6 +121,7 @@ class Fsm:
                         self.m_next_state = config.IDLE
 
             while(self.m_next_state == config.DOOR_OPEN): #door open state
+                #self.m_direction = config.DIRN_STOP
                 self.fsm_update_position()
                 heis.elevator_hardware_set_motor_direction(config.DIRN_STOP)
                 heis.elevator_hardware_set_door_open_lamp(1)

@@ -40,7 +40,7 @@ class OrderMatrix():
 
         else:
             elev_id = self.order_designate_elevator(pos_matrix, order)
-            print("elev_id:", elev_id)
+            #print("elev_id:", elev_id)
             if(OrderMatrix.m_order_matrix[order.floor][elev_id].order_set == 1 and OrderMatrix.m_order_matrix[order.floor][elev_id].order_type != order.order_type):
                 order.order_type = config.BUTTON_MULTI
             order.order_set = 1
