@@ -274,12 +274,21 @@ class OrderMatrix():
                 return 1
 
     def order_reassign_order(self, id):
-        for i in config.N_Floors:
-            temp_order[i] = OrderMatrix.m_order_matrix[i][id]
+        other_elev = ( id + 1 ) % 2
+        for i in range(config.N_FLOORS):
+            if(OrderMatrix.m_order_matrix[i][id].order_set == 1 and OrderMatrix.m_order_matrix[i][id].order_type != config.BUTTON_COMMAND):
+                OrderMatrix.m_order_matrix[i][other_elev].order_set = OrderMatrix.m_order_matrix[i][id].order_set
+                OrderMatrix.m_order_matrix[i][other_elev].order_type = OrderMatrix.m_order_matrix[i][id].order_type
+                OrderMatrix.m_order_matrix[i][id].order_set = 0
+
+        """temp_order = []
+        for i in range(config.N_FLOORS):
+            temp_order.append(OrderMatrix.m_order_matrix[i][id])
         OrderMatrix.m_order_matrix[:][id] = 0
         other_elev = ( id + 1 ) % 2
+        #print(other_elev)
         
-        for i in config.N_Floors:
+        for i in range(config.N_FLOORS):
             order = temp_order[i]
             if(order.order_type == config.BUTTON_COMMAND):
                 OrderMatrix.m_order_matrix[order.floor][other_elev] = 0
@@ -289,7 +298,7 @@ class OrderMatrix():
                 if(OrderMatrix.m_order_matrix[order.floor][other_elev].order_set == 1 and OrderMatrix.m_order_matrix[order.floor][other_elev].order_type != order.order_type):
                     order.order_type = config.BUTTON_MULTI
                 order.order_set = 1
-                OrderMatrix.m_order_matrix[order.floor][other_elev] = order
+                OrderMatrix.m_order_matrix[order.floor][other_elev] = order"""
         
 
 
@@ -304,8 +313,12 @@ class OrderMatrix():
 
 def test_json():
     o = OrderMatrix()
-    order = Order(1,1,1)
-    o.order_add(order, pos_matrix)
-    #print(o.m_order_matrix[1][0].order_set)
-    json = o.order_json_encode_order_matrix()
-    o.order_json_decode_order_matrix(json)
+    o.m_order_matrix[0][0].order_set = 1
+    o.m_order_matrix[0][0].order_type = 2
+    o.print_order_matrix(o.m_order_matrix)
+    o.order_reassign_order(0)
+    o.print_order_matrix(o.m_order_matrix)
+    print("sssss")
+    print(o.m_order_matrix[0][1].order_type)
+
+test_json()
