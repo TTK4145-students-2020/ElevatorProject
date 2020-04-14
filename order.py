@@ -273,6 +273,26 @@ class OrderMatrix():
             if(self.order_get_top(current_floor).order_set == 1 and self.order_get_top(current_floor).floor > current_floor):
                 return 1
 
+    def order_reassign_order(self, id):
+        for i in config.N_Floors:
+            temp_order[i] = OrderMatrix.m_order_matrix[i][id]
+        OrderMatrix.m_order_matrix[:][id] = 0
+        other_elev = ( id + 1 ) % 2
+        
+        for i in config.N_Floors:
+            order = temp_order[i]
+            if(order.order_type == config.BUTTON_COMMAND):
+                OrderMatrix.m_order_matrix[order.floor][other_elev] = 0
+
+            else:
+                elev_id = other_elev
+                if(OrderMatrix.m_order_matrix[order.floor][other_elev].order_set == 1 and OrderMatrix.m_order_matrix[order.floor][other_elev].order_type != order.order_type):
+                    order.order_type = config.BUTTON_MULTI
+                order.order_set = 1
+                OrderMatrix.m_order_matrix[order.floor][other_elev] = order
+        
+
+
 
     ###### skal fjernes, bare for at det skal være lett å se ordre matrisen
     def print_order_matrix(self, order_matrix):
