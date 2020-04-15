@@ -6,6 +6,7 @@ from ctypes.util import find_library
 from threading import Thread
 import fsm
 import order
+import time
 
 heis = cdll.LoadLibrary("petter/driver.so")
 
@@ -64,6 +65,7 @@ class Network:
         
         while True:
             #print(Network.online_elevators)
+            #elevator.queue.print_order_matrix(elevator.queue.m_order_matrix)
             
             for i in range(config.N_ELEVATORS):
                 if(i != config.ELEV_ID):
@@ -91,17 +93,19 @@ class Network:
                                         #print("j:",j,"k:",k,"type:", elevator.queue.m_order_matrix[j][k].order_type)
                                         ##print("1.", elevator.queue.m_order_matrix[j][k].order_set == 1)
                                         #print("2.", elevator.queue.m_order_matrix[j][k].order_type != config.BUTTON_COMMAND or elevator.queue.m_order_matrix[j][k].order_type != config.BUTTON_MULTI)
-                                        if(elevator.queue.m_order_matrix[j][k].order_set == 1 and elevator.queue.m_order_matrix[j][k].order_type != config.BUTTON_COMMAND and elevator.queue.m_order_matrix[j][k].order_type != config.BUTTON_MULTI):
-                                            heis.elevator_hardware_set_button_lamp(elevator.queue.m_order_matrix[j][k].order_type,j,1)
-                                        elif(elevator.queue.m_order_matrix[j][k].order_set == 0 and elevator.queue.m_order_matrix[j][k].order_type != config.BUTTON_MULTI):
-                                            heis.elevator_hardware_set_button_lamp(elevator.queue.m_order_matrix[j][k].order_type,j,0)
+                                        #print("floor:", j, "\t", elevator.queue.m_order_matrix[j][:].order_set)
+                                        #if(elevator.queue.m_order_matrix[j][k].order_set == 1 and elevator.queue.m_order_matrix[j][k].order_type != config.BUTTON_COMMAND and elevator.queue.m_order_matrix[j][k].order_type != config.BUTTON_MULTI): 
+                                            #heis.elevator_hardware_set_button_lamp(elevator.queue.m_order_matrix[j][k].order_type,j,1)
+                                        #elif(elevator.queue.m_order_matrix[j][k].order_set == 0 and elevator.queue.m_order_matrix[j][k].order_type != config.BUTTON_MULTI):
+                                            #print("turning off")
+                                            #heis.elevator_hardware_set_button_lamp(elevator.queue.m_order_matrix[j][k].order_type,j,0)
                                             #pass
                                     #elevator.queue.print_order_matrix(elevator.queue.m_order_matrix)
                                 #print("mottok order matrix")
                                 #elevator.queue.print_order_matrix(elevator.queue.m_order_matrix)
                             except:
                                 pass
-
+                            elevator.queue.order_light_control()
                             #self.UDP_broadcast(bytes("alive","ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID) 
                             #Network.lock.release()
                         #else:
@@ -118,12 +122,13 @@ class Network:
                         Network.online_elevators[msg-config.BASE_ELEVATOR_PORT] = 0
 
     def msg_send_handler(self, elevator):
-        heis.timer_start()
+        #heis.timer_start()
+        timer_start = time.time()
         while True:
-            if(heis.timer_expire() == 1):
+            if(time.time()-timer_start >= 3):
                 self.UDP_broadcast(bytes("alive", "ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID)
-                heis.timer_start()
-            if(elevator.queue.order_poll_buttons(elevator.m_position_matrix, Network.online_elevators) or elevator.m_next_state == config.DOOR_OPEN):
+                timer_start = time.time()
+            if(elevator.order_is_received == 1 or elevator.m_next_state == config.DOOR_OPEN):
                 #print("sender order matrix")
                 self.UDP_broadcast(bytes(elevator.queue.order_json_encode_order_matrix(), "ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID)
             if(elevator.fsm_get_current_floor() != -1): #and elevator.m_prev_registered_floor != elevator.fsm_get_current_floor()):

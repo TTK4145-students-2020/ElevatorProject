@@ -23,7 +23,11 @@ def main():
     p1.start()
     p2.start()
     p3.start()
-
+    while True:
+        #print("________", elev.order_is_received)
+        #print("polling", elev.queue.order_poll_buttons(elev.m_position_matrix, netw.online_elevators, elev.order_is_received))
+        time.sleep(1)
+        elev.queue.print_order_matrix(elev.queue.m_order_matrix)
             
                 
 
