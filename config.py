@@ -1,3 +1,6 @@
+from threading import Lock
+
+order_matrix_lock = Lock()
 
 N_ELEVATORS = 2
 N_FLOORS = 4
@@ -19,6 +22,8 @@ BUTTON_IN_UP = 4
 BUTTON_IN_DOWN = 5
 BUTTON_MULTI = 6
 
+N_DISTINCT_ORDERS = 7
+
 #states
 UNDEFINED = -1
 IDLE = 0
@@ -26,3 +31,4 @@ RUN = 1
 DOOR_OPEN = 2
 
 NUMBER_OF_ELEVATORS = 2
+

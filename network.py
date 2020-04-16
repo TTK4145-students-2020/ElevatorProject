@@ -11,7 +11,7 @@ import time
 heis = cdll.LoadLibrary("petter/driver.so")
 
 class Network:
-    #lock = Lock()
+
     online_elevators = [0]*config.N_ELEVATORS
     def __init__(self, ID): #IP_address, port,
     #Sets the broadcasting settings and connect
@@ -37,13 +37,16 @@ class Network:
         self.sock.shutdown()
         self.sock.close()"""
 
-    def UDP_broadcast(self, json_packet, IP_address, port):
+    def UDP_broadcast(self, json_packet, IP_address, port, elevator):
     # Broadcaster given packet to network.
         try:
             for i in range(10):
                 self.sock.sendto(json_packet, (IP_address,port))
+            Network.online_elevators[config.ELEV_ID] = 1
+            #print("online")
         except socket.timeout:
-            print("error")
+            Network.online_elevators[config.ELEV_ID] = 0
+
 
     def UDP_listen(self, port):
     # Listens given port.
@@ -82,14 +85,17 @@ class Network:
                                 #print("mottok pos matrix")
                             except:
                                 pass
+                            config.order_matrix_lock.acquire()
                             try:
-                                #print(msg[0])
+                                #print(msg[0]) 
                                 order_matrix = elevator.queue.order_json_decode_order_matrix(msg[0])
                                 #elevator.queue.print_order_matrix(order_matrix)
                                 #Fsm.queue.print_order_matrix(order_matrix)
+                                
                                 for k in range(config.N_ELEVATORS):
                                     for j in range (config.N_FLOORS):
                                         elevator.queue.m_order_matrix[j][k] = order_matrix[j][k]
+
                                         #print("j:",j,"k:",k,"type:", elevator.queue.m_order_matrix[j][k].order_type)
                                         ##print("1.", elevator.queue.m_order_matrix[j][k].order_set == 1)
                                         #print("2.", elevator.queue.m_order_matrix[j][k].order_type != config.BUTTON_COMMAND or elevator.queue.m_order_matrix[j][k].order_type != config.BUTTON_MULTI)
@@ -105,7 +111,8 @@ class Network:
                                 #elevator.queue.print_order_matrix(elevator.queue.m_order_matrix)
                             except:
                                 pass
-                            elevator.queue.order_light_control()
+                            config.order_matrix_lock.release()
+                            
                             #self.UDP_broadcast(bytes("alive","ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID) 
                             #Network.lock.release()
                         #else:
@@ -126,14 +133,16 @@ class Network:
         timer_start = time.time()
         while True:
             if(time.time()-timer_start >= 3):
-                self.UDP_broadcast(bytes("alive", "ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID)
+                self.UDP_broadcast(bytes("alive", "ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID, elevator)
                 timer_start = time.time()
             if(elevator.order_is_received == 1 or elevator.m_next_state == config.DOOR_OPEN):
                 #print("sender order matrix")
-                self.UDP_broadcast(bytes(elevator.queue.order_json_encode_order_matrix(), "ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID)
+                config.order_matrix_lock.acquire()
+                self.UDP_broadcast(bytes(elevator.queue.order_json_encode_order_matrix(), "ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID, elevator)
+                config.order_matrix_lock.release()
             if(elevator.fsm_get_current_floor() != -1): #and elevator.m_prev_registered_floor != elevator.fsm_get_current_floor()):
                 #print("sender pos matrix")
-                self.UDP_broadcast(bytes(elevator.queue.order_json_encode_position_matrix(elevator.m_position_matrix), "ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID)
+                self.UDP_broadcast(bytes(elevator.queue.order_json_encode_position_matrix(elevator.m_position_matrix), "ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID, elevator)
 
 
 

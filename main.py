@@ -26,7 +26,9 @@ def main():
     while True:
         #print("________", elev.order_is_received)
         #print("polling", elev.queue.order_poll_buttons(elev.m_position_matrix, netw.online_elevators, elev.order_is_received))
-        time.sleep(1)
+        time.sleep(0.5)
+        print("---online elevators---")
+        print(netw.online_elevators)
         elev.queue.print_order_matrix(elev.queue.m_order_matrix)
             
                 

@@ -15,10 +15,14 @@ gcc --std=gnu11 -shared -fPIC timer.c driver/elevator_hardware.c -o driver.so /u
 gcc --std=gnu11 -shared -fPIC timer.c driver/elevator_hardware.c -o driver.so /usr/lib/libcomedi.so
 
 
+sudo iptables -A INPUT -p tcp --dport 15657 -j ACCEPT
+sudo iptables -A INPUT -p tcp --sport 15657 -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 15658 -j ACCEPT
+sudo iptables -A INPUT -p tcp --sport 15658 -j ACCEPT
 
+sudo iptables -A INPUT -j DROP
 
-
-
+sudo iptables -F
 
 
 

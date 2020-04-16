@@ -28,7 +28,7 @@ class OrderMatrix():
     for i in range(config.N_FLOORS):
         m_order_matrix.append([])
         for j in range(config.N_ELEVATORS):
-            order = Order(i,-1, -1)
+            order = Order(i,-1, 0)
             m_order_matrix[i].append(order)
 
     def order_change_type(self, order, id):
@@ -72,15 +72,18 @@ class OrderMatrix():
         if(order.order_type == config.BUTTON_COMMAND):
             order = self.order_change_type(order,config.ELEV_ID)
             order.order_set = 1
+            config.order_matrix_lock.acquire()
             OrderMatrix.m_order_matrix[order.floor][config.ELEV_ID] = order
-
+            config.order_matrix_lock.release()
         else:
             elev_id = self.order_designate_elevator(pos_matrix, order)
             #print("elev_id:", elev_id)
             order = self.order_change_type(order,elev_id)
             order.order_set = 1
+            config.order_matrix_lock.acquire()
             OrderMatrix.m_order_matrix[order.floor][elev_id] = order
-    
+            config.order_matrix_lock.release()
+
     def order_poll_buttons(self, pos_matrix, online_elevators, order_is_received):
         #print(sum(online_elevators))
         if(order_is_received == 0):
@@ -93,28 +96,28 @@ class OrderMatrix():
                     order.order_type = config.BUTTON_COMMAND
                     #order.order_set = 1
                     self.order_add(order, pos_matrix)
-                    heis.elevator_hardware_set_button_lamp(config.BUTTON_COMMAND,i,1)
+                    #heis.elevator_hardware_set_button_lamp(config.BUTTON_COMMAND,i,1)
                     return order_is_received
 
                 if(heis.elevator_hardware_get_button_signal(config.BUTTON_CALL_DOWN, i)):
-                    if(sum(online_elevators) <= 1):
+                    if(sum(online_elevators) <= 1 or online_elevators[config.ELEV_ID] == 0):
                         return    
                     order_is_received = 1
                     order.floor = i
                     order.order_type = config.BUTTON_CALL_DOWN
                     #order.order_set = 1
                     self.order_add(order, pos_matrix)
-                    heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_DOWN,i,1)
+                    #heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_DOWN,i,1)
                     return order_is_received
                 if(heis.elevator_hardware_get_button_signal(config.BUTTON_CALL_UP, i)):
-                    if(sum(online_elevators) <= 1):
+                    if(sum(online_elevators) <= 1 or online_elevators[config.ELEV_ID] == 0):
                         return    
                     order_is_received = 1
                     order.floor = i
                     order.order_type = config.BUTTON_CALL_UP
                     #order.order_set = 1
                     self.order_add(order, pos_matrix)
-                    heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_UP,i,1)
+                    #heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_UP,i,1)
                     return order_is_received
         return order_is_received
     
@@ -212,15 +215,16 @@ class OrderMatrix():
     def order_clear_floor(self, floor):
         #for i in range(config.N_BUTTONS):
         OrderMatrix.m_order_matrix[floor][config.ELEV_ID].order_set = 0
-        OrderMatrix.m_order_matrix[floor][config.ELEV_ID].order_type = -1
-        for i in range(config.N_BUTTONS):
-            heis.elevator_hardware_set_button_lamp(i,floor,0)
+        #OrderMatrix.m_order_matrix[floor][config.ELEV_ID].order_type = -1
+        #for i in range(config.N_BUTTONS):
+            #heis.elevator_hardware_set_button_lamp(i,floor,0)
         
     def order_clear_all(self):
         for i in range(config.N_FLOORS):
-            for j in range(config.N_BUTTONS):
-                OrderMatrix.m_order_matrix[i][config.ELEV_ID].order_set = 0
-                heis.elevator_hardware_set_button_lamp(j,i,0)
+            for k in range(config.N_ELEVATORS):
+                for j in range(config.N_BUTTONS):
+                    OrderMatrix.m_order_matrix[i][k].order_set = 0
+                    heis.elevator_hardware_set_button_lamp(j,i,0)
         
     def order_is_set(self, floor):
         for i in range(config.N_ELEVATORS):
@@ -288,6 +292,7 @@ class OrderMatrix():
             elif(OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_set == 1 and OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type == config.BUTTON_UP_DOWN):
                 return 1    
             elif(OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_set == 1 and OrderMatrix.m_order_matrix[current_floor][config.ELEV_ID].order_type == config.BUTTON_COMMAND):
+                #print("jaaaaaaaaaaaa")
                 return 1
             elif(self.order_get_bottom(current_floor).floor == current_floor and self.order_get_bottom(current_floor).order_set == 1):
                 return 1
@@ -324,99 +329,145 @@ class OrderMatrix():
         other_elev = ( id + 1 ) % 2
         for i in range(config.N_FLOORS):
             if(OrderMatrix.m_order_matrix[i][id].order_set == 1 and OrderMatrix.m_order_matrix[i][id].order_type != config.BUTTON_COMMAND):
-                OrderMatrix.m_order_matrix[i][other_elev].order_set = OrderMatrix.m_order_matrix[i][id].order_set
 
                 if(OrderMatrix.m_order_matrix[i][id].order_type == config.BUTTON_IN_DOWN):
-                    OrderMatrix.m_order_matrix[i][other_elev].order_type = config.BUTTON_CALL_DOWN
+                    if(OrderMatrix.m_order_matrix[i][other_elev].order_set == 1):
+                        OrderMatrix.m_order_matrix[i][other_elev].order_type = config.BUTTON_IN_DOWN
+                    else: 
+                        OrderMatrix.m_order_matrix[i][other_elev].order_type = config.BUTTON_CALL_DOWN
+
                     OrderMatrix.m_order_matrix[i][id].order_type = config.BUTTON_COMMAND
                 
                 elif(OrderMatrix.m_order_matrix[i][id].order_type == config.BUTTON_IN_UP):
-                    OrderMatrix.m_order_matrix[i][other_elev].order_type = config.BUTTON_CALL_UP
+                    if(OrderMatrix.m_order_matrix[i][other_elev].order_set == 1):
+                        OrderMatrix.m_order_matrix[i][other_elev].order_type = config.BUTTON_IN_UP
+                    else: 
+                        OrderMatrix.m_order_matrix[i][other_elev].order_type = config.BUTTON_CALL_UP
                     OrderMatrix.m_order_matrix[i][id].order_type = config.BUTTON_COMMAND
 
                 elif(OrderMatrix.m_order_matrix[i][id].order_type == config.BUTTON_MULTI):
-                    OrderMatrix.m_order_matrix[i][other_elev].order_type = config.BUTTON_UP_DOWN
+                    if(OrderMatrix.m_order_matrix[i][other_elev].order_set == 1):
+                        OrderMatrix.m_order_matrix[i][other_elev].order_type = config.BUTTON_MULTI
+                    else: 
+                        OrderMatrix.m_order_matrix[i][other_elev].order_type = config.BUTTON_UP_DOWN
                     OrderMatrix.m_order_matrix[i][id].order_type = config.BUTTON_COMMAND
                 
-                else:
-                    OrderMatrix.m_order_matrix[i][other_elev].order_type = OrderMatrix.m_order_matrix[i][id].order_type
-                    OrderMatrix.m_order_matrix[i][id].order_type = -1
+                elif(OrderMatrix.m_order_matrix[i][id].order_type == config.BUTTON_CALL_DOWN):
+                    if(OrderMatrix.m_order_matrix[i][other_elev].order_set == 1):
+                        OrderMatrix.m_order_matrix[i][other_elev].order_type = config.BUTTON_IN_DOWN
+                    else:
+                        OrderMatrix.m_order_matrix[i][other_elev].order_type = OrderMatrix.m_order_matrix[i][id].order_type
+                    #OrderMatrix.m_order_matrix[i][id].order_type = -1
                     OrderMatrix.m_order_matrix[i][id].order_set = 0
 
-        """temp_order = []
-        for i in range(config.N_FLOORS):
-            temp_order.append(OrderMatrix.m_order_matrix[i][id])
-        OrderMatrix.m_order_matrix[:][id] = 0
-        other_elev = ( id + 1 ) % 2
-        #print(other_elev)
-        
-        for i in range(config.N_FLOORS):
-            order = temp_order[i]
-            if(order.order_type == config.BUTTON_COMMAND):
-                OrderMatrix.m_order_matrix[order.floor][other_elev] = 0
+                elif(OrderMatrix.m_order_matrix[i][id].order_type == config.BUTTON_CALL_UP):
+                    if(OrderMatrix.m_order_matrix[i][other_elev].order_set == 1):
+                        OrderMatrix.m_order_matrix[i][other_elev].order_type = config.BUTTON_IN_UP
+                    else:
+                        OrderMatrix.m_order_matrix[i][other_elev].order_type = OrderMatrix.m_order_matrix[i][id].order_type
+                    #OrderMatrix.m_order_matrix[i][id].order_type = -1
+                    OrderMatrix.m_order_matrix[i][id].order_set = 0
+                
+                elif(OrderMatrix.m_order_matrix[i][id].order_type == config.BUTTON_UP_DOWN):
+                    if(OrderMatrix.m_order_matrix[i][other_elev].order_set == 1):
+                        OrderMatrix.m_order_matrix[i][other_elev].order_type = config.BUTTON_MULTI
+                    else: 
+                        OrderMatrix.m_order_matrix[i][other_elev].order_type = config.BUTTON_UP_DOWN
+                    #OrderMatrix.m_order_matrix[i][id].order_type = -1
+                    OrderMatrix.m_order_matrix[i][id].order_set = 0
 
-            else:
-                elev_id = other_elev
-                if(OrderMatrix.m_order_matrix[order.floor][other_elev].order_set == 1 and OrderMatrix.m_order_matrix[order.floor][other_elev].order_type != order.order_type):
-                    order.order_type = config.BUTTON_MULTI
-                order.order_set = 1
-                OrderMatrix.m_order_matrix[order.floor][other_elev] = order"""
-        
+                OrderMatrix.m_order_matrix[i][other_elev].order_set = 1
+
     def order_light_control(self):
+        #print("går inn")
         for j in range (config.N_FLOORS):
-            for k in range(config.N_ELEVATORS):
-                other_elev = ( k + 1 ) % 2
+                other_elev = ( config.ELEV_ID + 1 ) % 2
                 #print("j:",j,"k:",k,"type:", elevator.queue.m_order_matrix[j][k].order_type)
                 ##print("1.", elevator.queue.m_order_matrix[j][k].order_set == 1)
                 #print("2.", elevator.queue.m_order_matrix[j][k].order_type != config.BUTTON_COMMAND or elevator.queue.m_order_matrix[j][k].order_type != config.BUTTON_MULTI
+                if(OrderMatrix.m_order_matrix[j][config.ELEV_ID].order_set == 1):
 
-                if(OrderMatrix.m_order_matrix[j][k].order_set == 1 and OrderMatrix.m_order_matrix[j][k].order_type != config.BUTTON_COMMAND):
-                    if(OrderMatrix.m_order_matrix[j][k].order_type == config.BUTTON_IN_DOWN):
+                    if(OrderMatrix.m_order_matrix[j][config.ELEV_ID].order_type == config.BUTTON_IN_DOWN):
                         heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_DOWN,j,1)
                         heis.elevator_hardware_set_button_lamp(config.BUTTON_COMMAND,j,1)
+                        heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_UP,j,0)
                     
-                    elif(OrderMatrix.m_order_matrix[j][k].order_type == config.BUTTON_IN_UP):
+                    elif(OrderMatrix.m_order_matrix[j][config.ELEV_ID].order_type == config.BUTTON_IN_UP):
                         heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_UP,j,1)
                         heis.elevator_hardware_set_button_lamp(config.BUTTON_COMMAND,j,1)
+                        heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_DOWN,j,0)
                     
-                    elif(OrderMatrix.m_order_matrix[j][k].order_type == config.BUTTON_UP_DOWN):
+                    elif(OrderMatrix.m_order_matrix[j][config.ELEV_ID].order_type == config.BUTTON_UP_DOWN):
                         heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_DOWN,j,1)
                         heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_UP,j,1)
+                        heis.elevator_hardware_set_button_lamp(config.BUTTON_COMMAND,j,0)
                     
-                    elif(OrderMatrix.m_order_matrix[j][k].order_type == config.BUTTON_MULTI):
+                    elif(OrderMatrix.m_order_matrix[j][config.ELEV_ID].order_type == config.BUTTON_MULTI):
                         heis.elevator_hardware_set_button_lamp(config.BUTTON_COMMAND,j,1)
                         heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_DOWN,j,1)
                         heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_UP,j,1)
 
-                    else:
-                        heis.elevator_hardware_set_button_lamp(OrderMatrix.m_order_matrix[j][k].order_type,j,1)
-                    break
+                    elif(OrderMatrix.m_order_matrix[j][config.ELEV_ID].order_type == config.BUTTON_CALL_UP):
+                        heis.elevator_hardware_set_button_lamp(config.BUTTON_COMMAND,j,0)
+                        heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_DOWN,j,0)
+                        heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_UP,j,1)
+                    
+                    elif(OrderMatrix.m_order_matrix[j][config.ELEV_ID].order_type == config.BUTTON_CALL_DOWN):
+                        heis.elevator_hardware_set_button_lamp(config.BUTTON_COMMAND,j,0)
+                        heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_DOWN,j,1)
+                        heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_UP,j,0)
+                    
+                    elif(OrderMatrix.m_order_matrix[j][config.ELEV_ID].order_type == config.BUTTON_COMMAND):
+                        heis.elevator_hardware_set_button_lamp(config.BUTTON_COMMAND,j,1)
+                        heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_DOWN,j,0)
+                        heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_UP,j,0)
+                    
 
-                elif(OrderMatrix.m_order_matrix[j][other_elev].order_set == 1 and OrderMatrix.m_order_matrix[j][other_elev].order_type != config.BUTTON_COMMAND):
+                if(OrderMatrix.m_order_matrix[j][other_elev].order_set == 1):
                     if(OrderMatrix.m_order_matrix[j][other_elev].order_type == config.BUTTON_IN_DOWN):
                         heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_DOWN,j,1)
-                        heis.elevator_hardware_set_button_lamp(config.BUTTON_COMMAND,j,1)
+                        if(OrderMatrix.m_order_matrix[j][config.ELEV_ID].order_set != 1):
+                            heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_UP,j,0)
+                        #heis.elevator_hardware_set_button_lamp(config.BUTTON_COMMAND,j,1)
                     
                     elif(OrderMatrix.m_order_matrix[j][other_elev].order_type == config.BUTTON_IN_UP):
+                        if(OrderMatrix.m_order_matrix[j][config.ELEV_ID].order_set != 1):
+                            heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_DOWN,j,0)
                         heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_UP,j,1)
-                        heis.elevator_hardware_set_button_lamp(config.BUTTON_COMMAND,j,1)
+                        #heis.elevator_hardware_set_button_lamp(config.BUTTON_COMMAND,j,1)
                     
                     elif(OrderMatrix.m_order_matrix[j][other_elev].order_type == config.BUTTON_UP_DOWN):
                         heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_DOWN,j,1)
                         heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_UP,j,1)
                     
                     elif(OrderMatrix.m_order_matrix[j][other_elev].order_type == config.BUTTON_MULTI):
-                        heis.elevator_hardware_set_button_lamp(config.BUTTON_COMMAND,j,1)
+                        #heis.elevator_hardware_set_button_lamp(config.BUTTON_COMMAND,j,1)
                         heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_DOWN,j,1)
                         heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_UP,j,1)
                     
-                    else:
-                        heis.elevator_hardware_set_button_lamp(OrderMatrix.m_order_matrix[j][other_elev].order_type,j,1)
-                    break
+                    elif(OrderMatrix.m_order_matrix[j][other_elev].order_type == config.BUTTON_CALL_UP):
+                        #heis.elevator_hardware_set_button_lamp(config.BUTTON_COMMAND,j,1)
+                        if(OrderMatrix.m_order_matrix[j][config.ELEV_ID].order_set != 1):
+                            heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_DOWN,j,0)
+                        heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_UP,j,1)
+                    
+                    elif(OrderMatrix.m_order_matrix[j][other_elev].order_type == config.BUTTON_CALL_DOWN):
+                        #heis.elevator_hardware_set_button_lamp(config.BUTTON_COMMAND,j,1)
+                        heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_DOWN,j,1)
+                        if(OrderMatrix.m_order_matrix[j][config.ELEV_ID].order_set != 1):
+                            heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_UP,j,0)
+                        #####################
+                    elif(OrderMatrix.m_order_matrix[j][other_elev].order_type == config.BUTTON_COMMAND):
+                        #heis.elevator_hardware_set_button_lamp(config.BUTTON_COMMAND,j,1)
+                        if(OrderMatrix.m_order_matrix[j][config.ELEV_ID].order_set != 1):
+                            heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_DOWN,j,0)
+                            heis.elevator_hardware_set_button_lamp(config.BUTTON_CALL_UP,j,0)
 
-                elif(OrderMatrix.m_order_matrix[j][k].order_set == 0 and OrderMatrix.m_order_matrix[j][other_elev].order_set == 0):
+                if(OrderMatrix.m_order_matrix[j][other_elev].order_set == 0 and OrderMatrix.m_order_matrix[j][config.ELEV_ID].order_set == 0):
                     for i in range(3):
                         heis.elevator_hardware_set_button_lamp(i,j,0)
+
+
 
 
     ###### skal fjernes, bare for at det skal være lett å se ordre matrisen
@@ -435,6 +486,8 @@ def test_json():
     o = OrderMatrix()
     o.m_order_matrix[0][0].order_set = 1
     o.m_order_matrix[0][0].order_type = 6
+    o.m_order_matrix[0][1].order_set = 1
+    o.m_order_matrix[0][1].order_type = 2
     o.print_order_matrix(o.m_order_matrix)
     o.order_reassign_order(0)
     o.print_order_matrix(o.m_order_matrix)
@@ -442,5 +495,3 @@ def test_json():
     #print(o.m_order_matrix[0][1].order_type)
    # print("_--------------_")
     #print(o.m_order_matrix[0][:])
-
-#test_json()
