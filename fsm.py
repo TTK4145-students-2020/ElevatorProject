@@ -10,6 +10,7 @@ import time
 elevator_driver = cdll.LoadLibrary("petter/driver.so")
 
 class Fsm:
+
     queue = order.OrderMatrix()
     order_is_received = 0
     error_timer_start = 0
@@ -17,6 +18,7 @@ class Fsm:
 
     #create position matrix
     m_position_matrix = []
+
     for i in range(config.N_FLOORS + 1):
         m_position_matrix.append([])
         for j in range(config.N_ELEVATORS):
@@ -117,7 +119,6 @@ class Fsm:
                 if(self.fsm_get_current_floor() == -1 and Fsm.queue.order_is_set(self.m_prev_registered_floor)):
                     self.m_next_state = config.RUN
                     
-
                     if(self.m_direction == config.DIRN_DOWN and self.m_stop_between_floors != 1):
                         self.m_direction = config.DIRN_UP
                     
@@ -194,6 +195,7 @@ class Fsm:
                     Fsm.queue.order_light_control()
                     self.fsm_check_failure(other_elev, online_elevators)
                     Fsm.queue.order_clear_floor(self.m_prev_registered_floor)
+                    
                     if(elevator_driver.timer_expire() == 1):
                         elevator_driver.elevator_hardware_set_door_open_lamp(0)
                         break                
