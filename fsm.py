@@ -7,7 +7,7 @@ import time
 
 
 
-elevator_driver = cdll.LoadLibrary("petter/driver.so")
+elevator_driver = cdll.LoadLibrary("driver/driver.so")
 
 class Fsm:
 

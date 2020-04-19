@@ -7,7 +7,7 @@ import fsm
 import order
 import time
 
-elevator_driver = cdll.LoadLibrary("petter/driver.so")
+elevator_driver = cdll.LoadLibrary("driver/driver.so")
 
 class Network:
 
@@ -96,8 +96,13 @@ class Network:
     def msg_send_handler(self, elevator):
 
         timer_start = time.time()
-
+        other_elev = ( config.ELEV_ID + 1 ) % 2
         while True:
+            
+            if(Network.online_elevators[other_elev] == 1 and elevator.m_position_matrix[0][other_elev] == 1 and elevator.queue.order_exists(other_elev) == 1):
+                config.order_matrix_lock.acquire()
+                self.UDP_broadcast(bytes(elevator.queue.order_json_encode_order_matrix(), "ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID, elevator)
+                config.order_matrix_lock.release()
 
             if(time.time()-timer_start >= 3):
                 self.UDP_broadcast(bytes("alive", "ascii"), "", config.BASE_ELEVATOR_PORT+config.ELEV_ID, elevator)

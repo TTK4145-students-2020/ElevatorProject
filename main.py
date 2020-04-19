@@ -7,7 +7,7 @@ import order
 from threading import Thread, Lock
 import time
 
-elevator_driver = cdll.LoadLibrary("petter/driver.so")
+elevator_driver = cdll.LoadLibrary("driver/driver.so")
 
 def main():
 
@@ -23,12 +23,5 @@ def main():
     running_thread.start()
     network_receiver_thread.start()
     network_sender_thread.start()
-
-    while True:
-        time.sleep(0.5)
-        print("---online elevators---")
-        print(netw.online_elevators)
-        elev.queue.print_order_matrix(elev.queue.m_order_matrix)
-
 
 main()

@@ -14,10 +14,7 @@ static pthread_mutex_t sockmtx;
 void elevator_hardware_init() {
     char ip[16] = "localhost";
     char port[8] = "15657";
-    con_load("elevator_hardware.con",
-        con_val("com_ip",   ip,   "%s")
-        con_val("com_port", port, "%s")
-    )
+
     
     pthread_mutex_init(&sockmtx, NULL);
     
@@ -96,7 +93,6 @@ int elevator_hardware_get_button_signal(elevator_hardware_button_type_t button, 
     pthread_mutex_unlock(&sockmtx);
     return buf[1];
 }
-
 
 int elevator_hardware_get_floor_sensor_signal(void) {
     pthread_mutex_lock(&sockmtx);

@@ -8,30 +8,33 @@
 - run the compile command below
 - now run a second simulator in a new terminal and main.py in another
 
-**Command to compile drivers to use python fsm and order module, must be run in the folder "petter":**
-gcc --std=gnu11 -shared -fPIC timer.c driver/elevator_hardware.c -o driver.so /usr/local/lib/libcomedi.so
+**Command to compile drivers to use python fsm and order module, must be run in the folder "driver":**
+gcc --std=gnu11 -shared -fPIC timer.c elevator_hardware.c -o driver.so /usr/local/lib/libcomedi.so
 
 **if its not working, try:**
-gcc --std=gnu11 -shared -fPIC timer.c driver/elevator_hardware.c -o driver.so /usr/lib/libcomedi.so
+gcc --std=gnu11 -shared -fPIC timer.c elevator_hardware.c -o driver.so /usr/lib/libcomedi.so
 
 
-sudo iptables -A INPUT -p tcp --dport 15657 -j ACCEPT
+**Test network issues:**
+- sudo iptables -A INPUT -p tcp --dport 15657 -j ACCEPT
 sudo iptables -A INPUT -p tcp --sport 15657 -j ACCEPT
 sudo iptables -A INPUT -p tcp --dport 15658 -j ACCEPT
 sudo iptables -A INPUT -p tcp --sport 15658 -j ACCEPT
 
+**Test disconnect:**
 sudo iptables -A INPUT -j DROP
 
+**Test packet loss:**
+sudo iptables -A INPUT -m statistic --mode random --probability 0.2 -j DROP
+
+**Flush after you're finished:**
 sudo iptables -F
 
 
-
-### OUTDATED:
-command to compile fsm:
-gcc --std=gnu11 -shared -fPIC timer.c order.c fsm.c main.c driver/elevator_hardware.c -o driver.so /usr/lib/libcomedi.so
-
-på petter sin pc: 
-gcc --std=gnu11 -shared -fPIC timer.c order.c fsm.c main.c driver/elevator_hardware.c -o driver.so /usr/local/lib/libcomedi.so
+## Libraries
+we have used some handed out code:
+- In the "driver" folder we have used the elevator_hardware files.
+- In the "ProjectResources-master" folder we have used the handed out d-code as a cost function
 
 
 
