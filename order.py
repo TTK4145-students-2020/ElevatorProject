@@ -442,15 +442,3 @@ class OrderMatrix():
                 elif(OrderMatrix.m_order_matrix[j][config.ELEV_ID].order_set == 0):
                     elevator_driver.elevator_hardware_set_button_lamp(2,j,0)
                 
-
-
-    ###### skal fjernes, bare for at det skal være lett å se ordre matrisen
-    def print_order_matrix(self, order_matrix):
-        print("--------order matrix------")
-        print("--set value--")
-        for i in range(config.N_FLOORS):
-            print(order_matrix[i][0].order_set, "\t", order_matrix[i][1].order_set)
-        print("--type value--")
-        for i in range(config.N_FLOORS):
-            print(order_matrix[i][0].order_type, "\t", order_matrix[i][1].order_type)
-
