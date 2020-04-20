@@ -8,7 +8,7 @@
 - run the compile command below
 - now run a second simulator in a new terminal and main.py in another
 
-**Command to compile drivers to use python fsm and order module, must be run in the folder "driver":**
+**Command to compile elevator driver for running c code in python, must be run in the folder "driver":**\
 gcc --std=gnu11 -shared -fPIC timer.c elevator_hardware.c -o driver.so /usr/local/lib/libcomedi.so
 
 **if its not working, try:**
