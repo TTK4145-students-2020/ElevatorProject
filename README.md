@@ -16,30 +16,30 @@ gcc --std=gnu11 -shared -fPIC timer.c elevator_hardware.c -o driver.so /usr/lib/
 
 
 ### Test network issues:
-**New command:**
+**New command:**\
 sudo iptables -A INPUT -p udp --dport 20000 -m statistic --mode random --probability 0.2 -j DROP\
 sudo iptables -A INPUT -p udp --dport 20001 -m statistic --mode random --probability 0.2 -j DROP
 
-**Old command:**
+**Old command:**\
 sudo iptables -A INPUT -p tcp --dport 15657 -j ACCEPT\
 sudo iptables -A INPUT -p tcp --sport 15657 -j ACCEPT\
 sudo iptables -A INPUT -p tcp --dport 15658 -j ACCEPT\
 sudo iptables -A INPUT -p tcp --sport 15658 -j ACCEPT
 
-**Test disconnect:**
+**Test disconnect:**\
 sudo iptables -A INPUT -j DROP
 
-**Test packet loss:**
+**Test packet loss:**\
 sudo iptables -A INPUT -m statistic --mode random --probability 0.2 -j DROP
 
-**Flush after you're finished:**
+**Flush after you're finished:**\
 sudo iptables -F
 
 
 ## Libraries
 we have used some handed out code:
 - In the "driver" folder we have used the elevator_hardware files.
-- In the "ProjectResources-master" folder we have used the handed out d-code as a cost function
+- In the "ProjectResources-master" folder we have used the handed out cost function code.
 
 
 
