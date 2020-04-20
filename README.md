@@ -17,13 +17,13 @@ gcc --std=gnu11 -shared -fPIC timer.c elevator_hardware.c -o driver.so /usr/lib/
 
 ### Test network issues:
 **New command:**
-sudo iptables -A INPUT -p udp --dport 20000 -m statistic --mode random --probability 0.2 -j DROP
+sudo iptables -A INPUT -p udp --dport 20000 -m statistic --mode random --probability 0.2 -j DROP\
 sudo iptables -A INPUT -p udp --dport 20001 -m statistic --mode random --probability 0.2 -j DROP
 
 **Old command:**
-- sudo iptables -A INPUT -p tcp --dport 15657 -j ACCEPT
-sudo iptables -A INPUT -p tcp --sport 15657 -j ACCEPT
-sudo iptables -A INPUT -p tcp --dport 15658 -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 15657 -j ACCEPT\
+sudo iptables -A INPUT -p tcp --sport 15657 -j ACCEPT\
+sudo iptables -A INPUT -p tcp --dport 15658 -j ACCEPT\
 sudo iptables -A INPUT -p tcp --sport 15658 -j ACCEPT
 
 **Test disconnect:**
